@@ -7,6 +7,12 @@ parameters:
     paths:
         - src
 
-    # The package source only; stubs are templates, not analysed code.
+    # Stubs are templates, not analysable source.
     excludePaths:
         - src/Console/Stubs/*
+
+    ignoreErrors:
+        # Traits are meant to be used by the consuming application's classes,
+        # so PHPStan reports them as "used zero times" inside the package.
+        -
+            identifier: trait.unused

@@ -27,22 +27,29 @@ class RepositoryTest extends TestCase
 
     public function test_it_creates_and_finds_a_record(): void
     {
+        /** @var Post $post */
         $post = $this->repository->create(['title' => 'Hello']);
 
         $this->assertDatabaseHas('posts', ['title' => 'Hello']);
-        $this->assertSame('Hello', $this->repository->find($post->id)->title);
+
+        /** @var Post $found */
+        $found = $this->repository->find($post->id);
+        $this->assertSame('Hello', $found->title);
     }
 
     public function test_it_updates_a_record(): void
     {
-        $post    = $this->repository->create(['title' => 'Old']);
-        $updated = $this->repository->update($post->id, ['title' => 'New']);
+        /** @var Post $post */
+        $post = $this->repository->create(['title' => 'Old']);
 
+        /** @var Post $updated */
+        $updated = $this->repository->update($post->id, ['title' => 'New']);
         $this->assertSame('New', $updated->title);
     }
 
     public function test_it_deletes_a_record(): void
     {
+        /** @var Post $post */
         $post = $this->repository->create(['title' => 'Bye']);
 
         $this->assertTrue($this->repository->delete($post->id));
