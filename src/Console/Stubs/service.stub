@@ -1,0 +1,14 @@
+<?php
+
+namespace {{ rootNamespace }}Services;
+
+use {{ rootNamespace }}Interfaces\{{ class }}RepositoryInterface;
+use MuhammedSalama\Base\Services\BaseService;
+
+class {{ class }}Service extends BaseService
+{
+    public function __construct({{ class }}RepositoryInterface $repository)
+    {
+        parent::__construct($repository);
+    }
+}

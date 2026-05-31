@@ -1,0 +1,46 @@
+{
+    "name": "muhammedsalama/laravel-base",
+    "description": "Laravel base package: Repository pattern, Services, Interfaces, external validation, Helpers (ApiResponse) and Traits.",
+    "type": "library",
+    "license": "MIT",
+    "homepage": "https://github.com/Muhammed2024Salama",
+    "keywords": [
+        "laravel",
+        "repository",
+        "service",
+        "api-response",
+        "form-request",
+        "trait"
+    ],
+    "authors": [
+        {
+            "name": "Muhammed Salama",
+            "homepage": "https://github.com/Muhammed2024Salama"
+        }
+    ],
+    "support": {
+        "issues": "https://github.com/Muhammed2024Salama/laravel-base/issues",
+        "source": "https://github.com/Muhammed2024Salama/laravel-base"
+    },
+    "require": {
+        "php": "^8.1",
+        "illuminate/support": ">=10.0",
+        "illuminate/http": ">=10.0",
+        "illuminate/database": ">=10.0",
+        "illuminate/contracts": ">=10.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "MuhammedSalama\\Base\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "MuhammedSalama\\Base\\BaseServiceProvider"
+            ]
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}

@@ -1,0 +1,10 @@
+<?php
+
+namespace {{ rootNamespace }}Interfaces;
+
+use MuhammedSalama\Base\Interfaces\RepositoryInterface;
+
+interface {{ class }}RepositoryInterface extends RepositoryInterface
+{
+    //
+}
