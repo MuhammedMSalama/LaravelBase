@@ -3,6 +3,7 @@
 namespace MuhammedSalama\Base\Traits;
 
 use MuhammedSalama\Base\Helpers\ApiResponse;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -38,7 +39,7 @@ trait ApiResponseTrait
         return ApiResponse::created($data, $message);
     }
 
-    protected function paginated($paginator, ?string $message = 'Success'): JsonResponse
+    protected function paginated(LengthAwarePaginator $paginator, ?string $message = 'Success'): JsonResponse
     {
         return ApiResponse::paginated($paginator, $message);
     }

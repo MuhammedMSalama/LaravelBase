@@ -528,6 +528,32 @@ return [
 
 The service provider loops over this array and binds each pair into the container automatically.
 
+---
+
+## Publishing to Packagist
+
+1. Push the package to GitHub and tag a release:
+
+   ```bash
+   git init
+   git add .
+   git commit -m "Initial commit"
+   git branch -M main
+   git remote add origin https://github.com/Muhammed2024Salama/laravel-base.git
+   git push -u origin main
+
+   git tag v1.0.0
+   git push origin v1.0.0
+   ```
+
+2. Sign in at [packagist.org](https://packagist.org) and click **Submit**.
+3. Paste the repository URL: `https://github.com/Muhammed2024Salama/laravel-base`.
+4. (Recommended) Enable the **GitHub auto-update hook** so new tags publish automatically.
+
+Once published, `composer require muhammedsalama/laravel-base` works for everyone, and the badges above start reflecting live data.
+
+---
+
 ## Troubleshooting
 
 **`Deprecation Notice: Function curl_close() is deprecated ...` during `composer` commands.**

@@ -2,6 +2,7 @@
 
 namespace MuhammedSalama\Base\Helpers;
 
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -115,7 +116,7 @@ class ApiResponse
      * @param string|null $message
      * @return JsonResponse
      */
-    public static function paginated($paginator, ?string $message = 'Success'): JsonResponse
+    public static function paginated(LengthAwarePaginator $paginator, ?string $message = 'Success'): JsonResponse
     {
         return response()->json([
             'status'  => true,

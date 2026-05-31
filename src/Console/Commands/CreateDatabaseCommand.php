@@ -5,6 +5,7 @@ namespace MuhammedSalama\Base\Console\Commands;
 use Illuminate\Console\Command;
 use PDO;
 use PDOException;
+use RuntimeException;
 
 class CreateDatabaseCommand extends Command
 {
@@ -21,23 +22,23 @@ class CreateDatabaseCommand extends Command
 
     public function handle(): int
     {
-        $connection = $this->option('connection') ?: config('database.default');
+        $connection = (string) ($this->option('connection') ?: config('database.default'));
         $config     = config("database.connections.{$connection}");
 
-        if (! $config) {
+        if (! is_array($config)) {
             $this->error("Connection [{$connection}] is not configured.");
             return self::FAILURE;
         }
 
-        $driver   = $config['driver']   ?? null;
-        $database = $config['database'] ?? null;
+        $driver   = (string) ($config['driver'] ?? '');
+        $database = (string) ($config['database'] ?? '');
 
         if (! in_array($driver, ['mysql', 'pgsql'], true)) {
-            $this->error("Only 'mysql' and 'pgsql' are supported. Current driver: " . ($driver ?? 'null'));
+            $this->error("Only 'mysql' and 'pgsql' are supported. Current driver: " . ($driver ?: 'none'));
             return self::FAILURE;
         }
 
-        if (empty($database)) {
+        if ($database === '') {
             $this->error('No database name is set for this connection.');
             return self::FAILURE;
         }
@@ -52,23 +53,25 @@ class CreateDatabaseCommand extends Command
         }
     }
 
+    /**
+     * @param array<string, mixed> $config
+     */
     protected function createMysql(array $config, string $database): int
     {
-        $host      = $config['host']      ?? '127.0.0.1';
-        $port      = $config['port']      ?? 3306;
-        $charset   = $config['charset']   ?? 'utf8mb4';
-        $collation = $config['collation'] ?? 'utf8mb4_unicode_ci';
+        $host      = (string) ($config['host']      ?? '127.0.0.1');
+        $port      = (int) ($config['port']         ?? 3306);
+        $charset   = (string) ($config['charset']   ?? 'utf8mb4');
+        $collation = (string) ($config['collation'] ?? 'utf8mb4_unicode_ci');
 
-        // Connect to the server WITHOUT selecting a database.
-        $pdo = new PDO(
-            "mysql:host={$host};port={$port}",
-            $config['username'] ?? null,
-            $config['password'] ?? null
-        );
-        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        $pdo = $this->connect("mysql:host={$host};port={$port}", $config);
 
-        $found = $pdo->query('SHOW DATABASES LIKE ' . $pdo->quote($database))->fetch();
-        if ($found) {
+        $statement = $pdo->prepare('SELECT SCHEMA_NAME FROM information_schema.SCHEMATA WHERE SCHEMA_NAME = ?');
+        if ($statement === false) {
+            throw new RuntimeException('Could not prepare the existence check.');
+        }
+        $statement->execute([$database]);
+
+        if ($statement->fetchColumn() !== false) {
             $this->info("Database '{$database}' already exists. Nothing to do.");
             return self::SUCCESS;
         }
@@ -80,33 +83,46 @@ class CreateDatabaseCommand extends Command
         return self::SUCCESS;
     }
 
+    /**
+     * @param array<string, mixed> $config
+     */
     protected function createPgsql(array $config, string $database): int
     {
-        $host    = $config['host']    ?? '127.0.0.1';
-        $port    = $config['port']    ?? 5432;
-        $charset = $config['charset'] ?? 'utf8';
+        $host    = (string) ($config['host']    ?? '127.0.0.1');
+        $port    = (int) ($config['port']       ?? 5432);
+        $charset = (string) ($config['charset'] ?? 'utf8');
 
-        // Connect to the default maintenance database 'postgres'.
-        $pdo = new PDO(
-            "pgsql:host={$host};port={$port};dbname=postgres",
-            $config['username'] ?? null,
-            $config['password'] ?? null
-        );
-        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        $pdo = $this->connect("pgsql:host={$host};port={$port};dbname=postgres", $config);
 
-        $stmt = $pdo->prepare('SELECT 1 FROM pg_database WHERE datname = ?');
-        $stmt->execute([$database]);
+        $statement = $pdo->prepare('SELECT 1 FROM pg_database WHERE datname = ?');
+        if ($statement === false) {
+            throw new RuntimeException('Could not prepare the existence check.');
+        }
+        $statement->execute([$database]);
 
-        if ($stmt->fetchColumn()) {
+        if ($statement->fetchColumn() !== false) {
             $this->info("Database '{$database}' already exists. Nothing to do.");
             return self::SUCCESS;
         }
 
-        // Identifiers can't be bound; the name comes from trusted config. Quote it safely.
         $safe = '"' . str_replace('"', '', $database) . '"';
         $pdo->exec("CREATE DATABASE {$safe} ENCODING '{$charset}'");
 
         $this->info("✔ Created PostgreSQL database '{$database}' (encoding {$charset}).");
         return self::SUCCESS;
+    }
+
+    /**
+     * @param array<string, mixed> $config
+     */
+    protected function connect(string $dsn, array $config): PDO
+    {
+        $username = isset($config['username']) ? (string) $config['username'] : null;
+        $password = isset($config['password']) ? (string) $config['password'] : null;
+
+        $pdo = new PDO($dsn, $username, $password);
+        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+        return $pdo;
     }
 }
