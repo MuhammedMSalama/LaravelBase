@@ -3,89 +3,76 @@
 namespace App\Traits;
 
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\File;
 
 trait ImageUploadTrait
 {
-    /**
-     * @param Request $request
-     * @param string  $inputName
-     * @param string  $path
-     * @return string|void
-     */
-    public function uploadImage(Request $request, $inputName, $path)
+    public function uploadImage(Request $request, string $inputName, string $path): ?string
     {
-        if ($request->hasFile($inputName)) {
-            $image     = $request->file($inputName);
-            $extension = $image->getClientOriginalExtension();
-            $imageName = 'media_' . uniqid() . '.' . $extension;
-
-            $image->move(public_path($path), $imageName);
-
-            return $path . '/' . $imageName;
+        if (! $request->hasFile($inputName)) {
+            return null;
         }
+
+        $image = $request->file($inputName);
+        if (! $image instanceof UploadedFile) {
+            return null;
+        }
+
+        $imageName = 'media_' . uniqid() . '.' . $image->getClientOriginalExtension();
+        $image->move(public_path($path), $imageName);
+
+        return $path . '/' . $imageName;
     }
 
     /**
-     * @param Request $request
-     * @param string  $inputName
-     * @param string  $path
-     * @return array|void
+     * @return array<int, string>
      */
-    public function uploadMultiImage(Request $request, $inputName, $path)
+    public function uploadMultiImage(Request $request, string $inputName, string $path): array
     {
-        $imagePaths = [];
+        $paths = [];
 
-        if ($request->hasFile($inputName)) {
-            $images = $request->{$inputName};
+        if (! $request->hasFile($inputName)) {
+            return $paths;
+        }
 
-            foreach ($images as $image) {
-                $ext       = $image->getClientOriginalExtension();
-                $imageName = 'media_' . uniqid() . '.' . $ext;
-
-                $image->move(public_path($path), $imageName);
-
-                $imagePaths[] = $path . '/' . $imageName;
+        foreach ((array) $request->file($inputName) as $image) {
+            if (! $image instanceof UploadedFile) {
+                continue;
             }
 
-            return $imagePaths;
-        }
-    }
-
-    /**
-     * @param Request $request
-     * @param string  $inputName
-     * @param string  $path
-     * @param string|null $oldPath
-     * @return string|void
-     */
-    public function updateImage(Request $request, $inputName, $path, $oldPath = null)
-    {
-        if ($request->hasFile($inputName)) {
-            /** Check File If Exists, then delete old one */
-            if ($oldPath && File::exists(public_path($oldPath))) {
-                File::delete(public_path($oldPath));
-            }
-
-            $image     = $request->file($inputName);
-            $extension = $image->getClientOriginalExtension();
-            $imageName = 'media_' . uniqid() . '.' . $extension;
-
+            $imageName = 'media_' . uniqid() . '.' . $image->getClientOriginalExtension();
             $image->move(public_path($path), $imageName);
 
-            return $path . '/' . $imageName;
+            $paths[] = $path . '/' . $imageName;
         }
+
+        return $paths;
     }
 
-    /**
-     * Handle delete file.
-     *
-     * @param string $path
-     * @return void
-     */
-    public function deleteImage(string $path)
+    public function updateImage(Request $request, string $inputName, string $path, ?string $oldPath = null): ?string
     {
-        /** Check File If Exists, then delete */
+        if (! $request->hasFile($inputName)) {
+            return null;
+        }
+
+        if ($oldPath && File::exists(public_path($oldPath))) {
+            File::delete(public_path($oldPath));
+        }
+
+        $image = $request->file($inputName);
+        if (! $image instanceof UploadedFile) {
+            return null;
+        }
+
+        $imageName = 'media_' . uniqid() . '.' . $image->getClientOriginalExtension();
+        $image->move(public_path($path), $imageName);
+
+        return $path . '/' . $imageName;
+    }
+
+    public function deleteImage(string $path): void
+    {
         if (File::exists(public_path($path))) {
             File::delete(public_path($path));
         }

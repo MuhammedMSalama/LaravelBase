@@ -33,13 +33,13 @@ class MakeRepositoryCommand extends Command
 
     public function handle(): int
     {
-        $class = Str::studly($this->argument('name'));
-        $model = Str::studly($this->option('model') ?: $class);
+        $class = Str::studly((string) $this->argument('name'));
+        $model = Str::studly((string) ($this->option('model') ?: $class));
 
         $rootNamespace  = $this->laravel->getNamespace();          // e.g. "App\"
         $modelNamespace = $rootNamespace . 'Models\\' . $model;     // e.g. "App\Models\Product"
 
-        $controller = $this->option('controller') ?: "{$class}Controller";
+        $controller = (string) ($this->option('controller') ?: "{$class}Controller");
         $controller = Str::studly($controller);
         if (! Str::endsWith($controller, 'Controller')) {
             $controller .= 'Controller';

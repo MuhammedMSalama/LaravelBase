@@ -22,7 +22,7 @@ class BaseServiceProvider extends ServiceProvider
         );
 
         // Explicit interface => implementation bindings from config.
-        foreach (config('base.bindings', []) as $interface => $implementation) {
+        foreach ((array) config('base.bindings', []) as $interface => $implementation) {
             $this->app->bind($interface, $implementation);
         }
 
@@ -79,7 +79,7 @@ class BaseServiceProvider extends ServiceProvider
 
         $appNamespace = $this->app->getNamespace(); // "App\"
 
-        foreach (glob($interfacePath . '/*RepositoryInterface.php') as $file) {
+        foreach ((glob($interfacePath . '/*RepositoryInterface.php') ?: []) as $file) {
             $base           = basename($file, '.php');                       // ProductRepositoryInterface
             $interface      = $appNamespace . 'Interfaces\\' . $base;        // App\Interfaces\ProductRepositoryInterface
             $implementation = $appNamespace . 'Repositories\\' . str_replace('Interface', '', $base); // App\Repositories\ProductRepository
