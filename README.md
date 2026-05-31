@@ -12,6 +12,10 @@
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green?style=flat-square" alt="License: MIT"></a>
 </p>
 
+<p align="center">
+  <em>The version, downloads, and PHP badges update automatically from Packagist once the package is published.</em>
+</p>
+
 ---
 
 ## Table of Contents
@@ -531,6 +535,30 @@ These notices come from Composer itself running on PHP 8.5 — not from this pac
 
 **`Your requirements could not be resolved ... nette/schema requires php 8.1 - 8.4`.**
 A transitive dependency in your project was locked to a version that predates PHP 8.5 support. Update it: `composer update nette/schema --with-all-dependencies`, then install/require again.
+
+---
+
+## Development
+
+Clone the repository and install the dev dependencies:
+
+```bash
+composer install
+```
+
+Run the test suite (PHPUnit + Orchestra Testbench):
+
+```bash
+composer test
+```
+
+Run static analysis (PHPStan / Larastan):
+
+```bash
+composer analyse
+```
+
+Both run automatically on every push and pull request via GitHub Actions (see `.github/workflows`).
 
 ---
 

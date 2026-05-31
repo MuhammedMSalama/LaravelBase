@@ -1,6 +1,6 @@
 {
     "name": "muhammedsalama/laravel-base",
-    "description": "Laravel base package: Repository pattern, Services, Interfaces, external validation, Helpers (ApiResponse) and Traits.",
+    "description": "Laravel base package: Repository pattern, Services, Interfaces, external validation, Helpers (ApiResponse), Traits, and generator commands.",
     "type": "library",
     "license": "MIT",
     "homepage": "https://github.com/Muhammed2024Salama",
@@ -29,16 +29,36 @@
         "illuminate/database": ">=10.0",
         "illuminate/contracts": ">=10.0"
     },
+    "require-dev": {
+        "orchestra/testbench": "^8.0|^9.0|^10.0",
+        "phpunit/phpunit": "^10.5|^11.0",
+        "larastan/larastan": "^2.9|^3.0"
+    },
     "autoload": {
         "psr-4": {
             "MuhammedSalama\\Base\\": "src/"
         }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "MuhammedSalama\\Base\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "vendor/bin/phpunit",
+        "analyse": "vendor/bin/phpstan analyse"
     },
     "extra": {
         "laravel": {
             "providers": [
                 "MuhammedSalama\\Base\\BaseServiceProvider"
             ]
+        }
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "phpstan/extension-installer": true
         }
     },
     "minimum-stability": "stable",
