@@ -4,6 +4,7 @@ namespace MuhammedSalama\Base;
 
 use Illuminate\Support\ServiceProvider;
 use MuhammedSalama\Base\Console\Commands\MakeRepositoryCommand;
+use MuhammedSalama\Base\Console\Commands\CreateDatabaseCommand;
 
 class BaseServiceProvider extends ServiceProvider
 {
@@ -44,8 +45,20 @@ class BaseServiceProvider extends ServiceProvider
                 __DIR__ . '/../config/base.php' => config_path('base.php'),
             ], 'base-config');
 
+            // Publish an editable copy of the ApiResponse helper into the app.
+            $this->publishes([
+                __DIR__ . '/../stubs/app/Helpers/ApiResponse.php' => app_path('Helpers/ApiResponse.php'),
+            ], 'base-helpers');
+
+            // Publish editable copies of the traits into the app.
+            $this->publishes([
+                __DIR__ . '/../stubs/app/Traits/ApiResponseTrait.php' => app_path('Traits/ApiResponseTrait.php'),
+                __DIR__ . '/../stubs/app/Traits/ImageUploadTrait.php' => app_path('Traits/ImageUploadTrait.php'),
+            ], 'base-traits');
+
             $this->commands([
                 MakeRepositoryCommand::class,
+                CreateDatabaseCommand::class,
             ]);
         }
     }

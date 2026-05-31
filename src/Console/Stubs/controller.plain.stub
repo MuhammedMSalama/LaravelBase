@@ -1,0 +1,43 @@
+<?php
+
+namespace {{ rootNamespace }}Http\Controllers;
+
+use {{ rootNamespace }}Services\{{ class }}Service;
+use Illuminate\Http\Request;
+use MuhammedSalama\Base\Traits\ApiResponseTrait;
+
+class {{ controller }} extends Controller
+{
+    use ApiResponseTrait;
+
+    public function __construct(private {{ class }}Service $service)
+    {
+    }
+
+    public function index()
+    {
+        return $this->success($this->service->all());
+    }
+
+    public function show($id)
+    {
+        return $this->success($this->service->find($id));
+    }
+
+    public function store(Request $request)
+    {
+        return $this->created($this->service->store($request->all()));
+    }
+
+    public function update(Request $request, $id)
+    {
+        return $this->success($this->service->update($id, $request->all()));
+    }
+
+    public function destroy($id)
+    {
+        $this->service->destroy($id);
+
+        return $this->success(null, 'Deleted successfully');
+    }
+}

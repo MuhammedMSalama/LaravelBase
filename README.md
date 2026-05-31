@@ -143,7 +143,8 @@ src/
 │   └── Stubs/
 │       ├── interface.stub
 │       ├── repository.stub
-│       └── service.stub
+│       ├── service.stub
+│       └── controller.stub
 ├── Interfaces/
 │   ├── RepositoryInterface.php
 │   └── ServiceInterface.php
@@ -153,6 +154,12 @@ src/
 │   └── BaseService.php
 ├── Requests/
 │   └── BaseRequest.php
+├── Helpers/
+│   └── ApiResponse.php
+└── Traits/
+    ├── ApiResponseTrait.php
+    └── ImageUploadTrait.php
+stubs/app/            # editable copies for vendor:publish
 ├── Helpers/
 │   └── ApiResponse.php
 └── Traits/
@@ -180,15 +187,33 @@ This generates:
 app/Interfaces/ProductRepositoryInterface.php
 app/Repositories/ProductRepository.php
 app/Services/ProductService.php
+app/Http/Requests/Product/StoreProductRequest.php
+app/Http/Requests/Product/UpdateProductRequest.php
+app/Http/Controllers/ProductController.php
+database/migrations/xxxx_create_products_table.php
 ```
+
+The generated controller is fully wired: it injects the service, uses `ApiResponseTrait`, type-hints the generated Form Requests, and ships with `index`, `show`, `store`, `update`, and `destroy`. Validation lives in the request classes (extending `BaseRequest`), so failures return the standard `422` envelope automatically.
 
 Options:
 
-| Option              | Description                                       |
-| ------------------- | ------------------------------------------------- |
-| `--model=Post`      | Wrap a model whose name differs from the argument.|
-| `--no-service`      | Generate only the interface and repository.       |
-| `--force`           | Overwrite existing files.                         |
+| Option                        | Description                                                  |
+| ----------------------------- | ------------------------------------------------------------ |
+| `--model=Post`                | Wrap a model whose name differs from the argument.           |
+| `--controller=BlogController` | Use a custom controller name (defaults to `{Name}Controller`). |
+| `--no-service`                | Skip generating the Service class.                           |
+| `--no-controller`             | Skip generating the Controller class.                        |
+| `--no-request`                | Skip the Form Request classes (controller falls back to a plain `Request`). |
+| `--no-migration`              | Skip generating the migration.                               |
+| `--force`                     | Overwrite existing files.                                    |
+
+Examples:
+
+```bash
+php artisan make:repository Post                          # full set
+php artisan make:repository Post --controller=BlogController
+php artisan make:repository Post --no-request --no-migration
+```
 
 Thanks to **auto-binding**, the generated interface is wired to its repository automatically — you can inject `ProductService` (or `ProductRepositoryInterface`) right away, no manual binding required.
 
@@ -443,6 +468,45 @@ $path = $this->uploadImage($request, 'image', 'uploads/products');
 $path = $this->updateImage($request, 'image', 'uploads/products', $product->image);
 $this->deleteImage($product->image);
 ```
+
+---
+
+## Creating the Database
+
+The package can create your database if it doesn't exist yet, using whichever driver is set in your `.env` (MySQL or PostgreSQL):
+
+```bash
+php artisan base:create-database
+```
+
+It reads the default connection from `config/database.php`, and:
+
+- if the database already exists, it does nothing;
+- if it doesn't, it creates it using the proper syntax for the driver — MySQL with the configured charset/collation, PostgreSQL with the configured encoding.
+
+Use a non-default connection with `--connection`:
+
+```bash
+php artisan base:create-database --connection=pgsql
+```
+
+> Requires the matching PDO driver (`pdo_mysql` / `pdo_pgsql`) and a DB user with `CREATE DATABASE` privileges. Only `mysql` and `pgsql` are supported.
+
+---
+
+## Publishing the Helper & Traits
+
+By default the `ApiResponse` helper and the traits are used directly from the package namespace (`use MuhammedSalama\Base\Helpers\ApiResponse;`) — no copying needed, and you get updates for free.
+
+If you want **editable local copies** inside your app (with the correct `App\` namespace), publish them:
+
+```bash
+php artisan vendor:publish --tag=base-helpers   # -> app/Helpers/ApiResponse.php
+php artisan vendor:publish --tag=base-traits    # -> app/Traits/ApiResponseTrait.php, app/Traits/ImageUploadTrait.php
+php artisan vendor:publish --tag=base-config     # -> config/base.php
+```
+
+The published files use the `App\Helpers` / `App\Traits` namespaces, so you can edit them freely. Switch your imports to `App\Helpers\ApiResponse` / `App\Traits\...` if you go this route.
 
 ---
 

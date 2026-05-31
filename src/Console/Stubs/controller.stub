@@ -1,0 +1,44 @@
+<?php
+
+namespace {{ rootNamespace }}Http\Controllers;
+
+use {{ rootNamespace }}Http\Requests\{{ class }}\Store{{ class }}Request;
+use {{ rootNamespace }}Http\Requests\{{ class }}\Update{{ class }}Request;
+use {{ rootNamespace }}Services\{{ class }}Service;
+use MuhammedSalama\Base\Traits\ApiResponseTrait;
+
+class {{ controller }} extends Controller
+{
+    use ApiResponseTrait;
+
+    public function __construct(private {{ class }}Service $service)
+    {
+    }
+
+    public function index()
+    {
+        return $this->success($this->service->all());
+    }
+
+    public function show($id)
+    {
+        return $this->success($this->service->find($id));
+    }
+
+    public function store(Store{{ class }}Request $request)
+    {
+        return $this->created($this->service->store($request->validated()));
+    }
+
+    public function update(Update{{ class }}Request $request, $id)
+    {
+        return $this->success($this->service->update($id, $request->validated()));
+    }
+
+    public function destroy($id)
+    {
+        $this->service->destroy($id);
+
+        return $this->success(null, 'Deleted successfully');
+    }
+}

@@ -1,0 +1,21 @@
+<?php
+
+namespace {{ rootNamespace }}Http\Requests\{{ class }};
+
+use MuhammedSalama\Base\Requests\BaseRequest;
+
+class {{ request }} extends BaseRequest
+{
+    /**
+     * Validation rules. Failed validation returns the standard
+     * ApiResponse JSON envelope (422) automatically.
+     *
+     * @return array
+     */
+    public function rules(): array
+    {
+        return [
+            //
+        ];
+    }
+}
