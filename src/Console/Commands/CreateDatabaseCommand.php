@@ -22,18 +22,18 @@ class CreateDatabaseCommand extends Command
 
     public function handle(): int
     {
-        $connection = (string) ($this->option('connection') ?: config('database.default'));
-        $config     = config("database.connections.{$connection}");
+        $connection = (string)($this->option('connection') ?: config('database.default'));
+        $config = config("database.connections.{$connection}");
 
-        if (! is_array($config)) {
+        if (!is_array($config)) {
             $this->error("Connection [{$connection}] is not configured.");
             return self::FAILURE;
         }
 
-        $driver   = (string) ($config['driver'] ?? '');
-        $database = (string) ($config['database'] ?? '');
+        $driver = (string)($config['driver'] ?? '');
+        $database = (string)($config['database'] ?? '');
 
-        if (! in_array($driver, ['mysql', 'pgsql'], true)) {
+        if (!in_array($driver, ['mysql', 'pgsql'], true)) {
             $this->error("Only 'mysql' and 'pgsql' are supported. Current driver: " . ($driver ?: 'none'));
             return self::FAILURE;
         }
@@ -58,10 +58,25 @@ class CreateDatabaseCommand extends Command
      */
     protected function createMysql(array $config, string $database): int
     {
-        $host      = (string) ($config['host']      ?? '127.0.0.1');
-        $port      = (int) ($config['port']         ?? 3306);
-        $charset   = (string) ($config['charset']   ?? 'utf8mb4');
-        $collation = (string) ($config['collation'] ?? 'utf8mb4_unicode_ci');
+        $host = (string)($config['host'] ?? '127.0.0.1');
+        $port = (int)($config['port'] ?? 3306);
+        $charset = (string)($config['charset'] ?? 'utf8mb4');
+        $collation = (string)($config['collation'] ?? 'utf8mb4_unicode_ci');
+
+        if (!$this->validateIdentifier($database)) {
+            $this->error("Database name '{$database}' contains invalid characters. Only letters, digits, underscores, and hyphens are allowed.");
+            return self::FAILURE;
+        }
+
+        if (!$this->validateIdentifier($charset)) {
+            $this->error("Charset '{$charset}' contains invalid characters.");
+            return self::FAILURE;
+        }
+
+        if (!preg_match('/^[A-Za-z0-9_]+$/', $collation)) {
+            $this->error("Collation '{$collation}' contains invalid characters.");
+            return self::FAILURE;
+        }
 
         $pdo = $this->connect("mysql:host={$host};port={$port}", $config);
 
@@ -76,8 +91,8 @@ class CreateDatabaseCommand extends Command
             return self::SUCCESS;
         }
 
-        $safe = str_replace('`', '', $database);
-        $pdo->exec("CREATE DATABASE `{$safe}` CHARACTER SET {$charset} COLLATE {$collation}");
+        $safeName = '`' . str_replace('`', '``', $database) . '`';
+        $pdo->exec("CREATE DATABASE {$safeName} CHARACTER SET {$charset} COLLATE {$collation}");
 
         $this->info("✔ Created MySQL database '{$database}' (charset {$charset}).");
         return self::SUCCESS;
@@ -88,9 +103,19 @@ class CreateDatabaseCommand extends Command
      */
     protected function createPgsql(array $config, string $database): int
     {
-        $host    = (string) ($config['host']    ?? '127.0.0.1');
-        $port    = (int) ($config['port']       ?? 5432);
-        $charset = (string) ($config['charset'] ?? 'utf8');
+        $host = (string)($config['host'] ?? '127.0.0.1');
+        $port = (int)($config['port'] ?? 5432);
+        $encoding = (string)($config['charset'] ?? 'UTF8');
+
+        if (!$this->validateIdentifier($database)) {
+            $this->error("Database name '{$database}' contains invalid characters. Only letters, digits, underscores, and hyphens are allowed.");
+            return self::FAILURE;
+        }
+
+        if (!$this->validateIdentifier($encoding)) {
+            $this->error("Encoding '{$encoding}' contains invalid characters.");
+            return self::FAILURE;
+        }
 
         $pdo = $this->connect("pgsql:host={$host};port={$port};dbname=postgres", $config);
 
@@ -105,11 +130,20 @@ class CreateDatabaseCommand extends Command
             return self::SUCCESS;
         }
 
-        $safe = '"' . str_replace('"', '', $database) . '"';
-        $pdo->exec("CREATE DATABASE {$safe} ENCODING '{$charset}'");
+        $safeName = '"' . str_replace('"', '""', $database) . '"';
+        $pdo->exec("CREATE DATABASE {$safeName} ENCODING '{$encoding}'");
 
-        $this->info("✔ Created PostgreSQL database '{$database}' (encoding {$charset}).");
+        $this->info("✔ Created PostgreSQL database '{$database}' (encoding {$encoding}).");
         return self::SUCCESS;
+    }
+
+    /**
+     * Ensure a SQL identifier contains only safe characters.
+     * Rejects anything outside letters, digits, underscores, and hyphens.
+     */
+    protected function validateIdentifier(string $value): bool
+    {
+        return (bool)preg_match('/^[A-Za-z0-9_\-]+$/', $value);
     }
 
     /**
@@ -117,8 +151,8 @@ class CreateDatabaseCommand extends Command
      */
     protected function connect(string $dsn, array $config): PDO
     {
-        $username = isset($config['username']) ? (string) $config['username'] : null;
-        $password = isset($config['password']) ? (string) $config['password'] : null;
+        $username = isset($config['username']) ? (string)$config['username'] : null;
+        $password = isset($config['password']) ? (string)$config['password'] : null;
 
         $pdo = new PDO($dsn, $username, $password);
         $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);

@@ -19,7 +19,7 @@ trait ImageUploadTrait
             return null;
         }
 
-        $imageName = 'media_' . uniqid() . '.' . $image->getClientOriginalExtension();
+        $imageName = 'media_' . uniqid() . '.' . $image->extension();
         $image->move(public_path($path), $imageName);
 
         return $path . '/' . $imageName;
@@ -41,7 +41,7 @@ trait ImageUploadTrait
                 continue;
             }
 
-            $imageName = 'media_' . uniqid() . '.' . $image->getClientOriginalExtension();
+            $imageName = 'media_' . uniqid() . '.' . $image->extension();
             $image->move(public_path($path), $imageName);
 
             $paths[] = $path . '/' . $imageName;
@@ -65,7 +65,7 @@ trait ImageUploadTrait
             return null;
         }
 
-        $imageName = 'media_' . uniqid() . '.' . $image->getClientOriginalExtension();
+        $imageName = 'media_' . uniqid() . '.' . $image->extension();
         $image->move(public_path($path), $imageName);
 
         return $path . '/' . $imageName;

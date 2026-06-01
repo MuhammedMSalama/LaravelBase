@@ -10,16 +10,16 @@ trait ImageUploadTrait
 {
     public function uploadImage(Request $request, string $inputName, string $path): ?string
     {
-        if (! $request->hasFile($inputName)) {
+        if (!$request->hasFile($inputName)) {
             return null;
         }
 
         $image = $request->file($inputName);
-        if (! $image instanceof UploadedFile) {
+        if (!$image instanceof UploadedFile) {
             return null;
         }
 
-        $imageName = 'media_' . uniqid() . '.' . $image->getClientOriginalExtension();
+        $imageName = 'media_' . uniqid() . '.' . $image->extension();
         $image->move(public_path($path), $imageName);
 
         return $path . '/' . $imageName;
@@ -32,16 +32,16 @@ trait ImageUploadTrait
     {
         $paths = [];
 
-        if (! $request->hasFile($inputName)) {
+        if (!$request->hasFile($inputName)) {
             return $paths;
         }
 
-        foreach ((array) $request->file($inputName) as $image) {
-            if (! $image instanceof UploadedFile) {
+        foreach ((array)$request->file($inputName) as $image) {
+            if (!$image instanceof UploadedFile) {
                 continue;
             }
 
-            $imageName = 'media_' . uniqid() . '.' . $image->getClientOriginalExtension();
+            $imageName = 'media_' . uniqid() . '.' . $image->extension();
             $image->move(public_path($path), $imageName);
 
             $paths[] = $path . '/' . $imageName;
@@ -52,7 +52,7 @@ trait ImageUploadTrait
 
     public function updateImage(Request $request, string $inputName, string $path, ?string $oldPath = null): ?string
     {
-        if (! $request->hasFile($inputName)) {
+        if (!$request->hasFile($inputName)) {
             return null;
         }
 
@@ -61,11 +61,11 @@ trait ImageUploadTrait
         }
 
         $image = $request->file($inputName);
-        if (! $image instanceof UploadedFile) {
+        if (!$image instanceof UploadedFile) {
             return null;
         }
 
-        $imageName = 'media_' . uniqid() . '.' . $image->getClientOriginalExtension();
+        $imageName = 'media_' . uniqid() . '.' . $image->extension();
         $image->move(public_path($path), $imageName);
 
         return $path . '/' . $imageName;

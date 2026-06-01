@@ -16,9 +16,9 @@ trait ApiResponseTrait
     protected function success($data = null, ?string $message = 'Success', int $code = Response::HTTP_OK): JsonResponse
     {
         return response()->json([
-            'status'  => true,
+            'status' => true,
             'message' => $message,
-            'data'    => $data,
+            'data' => $data,
         ], $code);
     }
 
@@ -30,9 +30,9 @@ trait ApiResponseTrait
     protected function error(?string $message = 'Something went wrong', int $code = Response::HTTP_BAD_REQUEST, $errors = null): JsonResponse
     {
         return response()->json([
-            'status'  => false,
+            'status' => false,
             'message' => $message,
-            'errors'  => $errors,
+            'errors' => $errors,
         ], $code);
     }
 
@@ -46,17 +46,27 @@ trait ApiResponseTrait
         return $this->error($message, Response::HTTP_NOT_FOUND);
     }
 
+    protected function unauthorized(?string $message = 'Unauthorized'): JsonResponse
+    {
+        return $this->error($message, Response::HTTP_UNAUTHORIZED);
+    }
+
+    protected function forbidden(?string $message = 'Forbidden'): JsonResponse
+    {
+        return $this->error($message, Response::HTTP_FORBIDDEN);
+    }
+
     protected function paginated($paginator, ?string $message = 'Success'): JsonResponse
     {
         return response()->json([
-            'status'  => true,
+            'status' => true,
             'message' => $message,
-            'data'    => $paginator->items(),
-            'meta'    => [
+            'data' => $paginator->items(),
+            'meta' => [
                 'current_page' => $paginator->currentPage(),
-                'last_page'    => $paginator->lastPage(),
-                'per_page'     => $paginator->perPage(),
-                'total'        => $paginator->total(),
+                'last_page' => $paginator->lastPage(),
+                'per_page' => $paginator->perPage(),
+                'total' => $paginator->total(),
             ],
         ], Response::HTTP_OK);
     }

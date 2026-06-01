@@ -1,55 +1,131 @@
 name: CI
 
+# Run on every push to main and every pull-request targeting main.
 on:
   push:
     branches: [main]
   pull_request:
     branches: [main]
 
+# Cancel any in-progress run for the same branch / PR so runners are
+# never wasted on superseded commits.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
+
+  # ---------------------------------------------------------------------------
+  # Test matrix: PHP 8.1–8.4 × Laravel 10/11/12 + one prefer-lowest run
+  # ---------------------------------------------------------------------------
   tests:
+    name: "PHP ${{ matrix.php }} / Laravel ${{ matrix.laravel }} (${{ matrix.dependency-version }})"
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     strategy:
       fail-fast: false
       matrix:
-        php: ['8.2', '8.3', '8.4']
+        php:  ['8.1', '8.2', '8.3', '8.4']
+        laravel: ['10.*', '11.*', '12.*']
+        dependency-version: ['prefer-stable']
 
-    name: Tests - PHP ${{ matrix.php }}
+        include:
+          # Map each Laravel generation to the correct Orchestra Testbench major.
+          - laravel: '10.*'
+            testbench: '^8.0'
+          - laravel: '11.*'
+            testbench: '^9.0'
+          - laravel: '12.*'
+            testbench: '^10.0'
+          # One prefer-lowest run on the oldest supported combination
+          # to catch under-constrained minimum version requirements.
+          - php: '8.1'
+            laravel: '10.*'
+            testbench: '^8.0'
+            dependency-version: prefer-lowest
+
+        exclude:
+          # Laravel 11+ requires PHP 8.2+ (testbench 9+/10+ enforce this).
+          - php: '8.1'
+            laravel: '11.*'
+          - php: '8.1'
+            laravel: '12.*'
 
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup PHP
+      - name: Set up PHP ${{ matrix.php }}
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
           extensions: dom, curl, libxml, mbstring, pdo, sqlite, pdo_sqlite
           coverage: none
 
-      - name: Install dependencies
-        run: composer update --prefer-stable --prefer-dist --no-interaction --no-progress
+      - name: Get Composer cache directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+
+      - name: Cache Composer packages
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-php${{ matrix.php }}-laravel${{ matrix.laravel }}-${{ matrix.dependency-version }}-${{ hashFiles('**/composer.json') }}
+          restore-keys: |
+            ${{ runner.os }}-php${{ matrix.php }}-laravel${{ matrix.laravel }}-${{ matrix.dependency-version }}-
+            ${{ runner.os }}-php${{ matrix.php }}-laravel${{ matrix.laravel }}-
+            ${{ runner.os }}-php${{ matrix.php }}-
+
+      - name: Constrain to Laravel ${{ matrix.laravel }}
+        run: |
+          composer require \
+            "illuminate/support:${{ matrix.laravel }}" \
+            "illuminate/http:${{ matrix.laravel }}" \
+            "illuminate/database:${{ matrix.laravel }}" \
+            "illuminate/contracts:${{ matrix.laravel }}" \
+            "orchestra/testbench:${{ matrix.testbench }}" \
+            --no-update
+
+      - name: Install dependencies (${{ matrix.dependency-version }})
+        run: composer update --${{ matrix.dependency-version }} --prefer-dist --no-interaction --no-progress
 
       - name: Run tests
-        run: vendor/bin/phpunit
+        run: composer test
 
-  phpstan:
+  # ---------------------------------------------------------------------------
+  # Static analysis — always on latest stable Laravel, PHP 8.3
+  # ---------------------------------------------------------------------------
+  static-analysis:
+    name: Static Analysis (PHPStan)
     runs-on: ubuntu-latest
-    name: Static Analysis
+    timeout-minutes: 10
 
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup PHP
+      - name: Set up PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.3'
+          extensions: dom, curl, libxml, mbstring, pdo, sqlite, pdo_sqlite
           coverage: none
 
-      - name: Install dependencies
-        run: composer update --prefer-dist --no-interaction --no-progress
+      - name: Get Composer cache directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
 
-      - name: Run PHPStan
-        run: vendor/bin/phpstan analyse --no-progress
+      - name: Cache Composer packages
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-phpstan-${{ hashFiles('**/composer.json') }}
+          restore-keys: |
+            ${{ runner.os }}-phpstan-
+
+      - name: Install dependencies
+        run: composer update --prefer-stable --prefer-dist --no-interaction --no-progress
+
+      - name: Run static analysis
+        run: composer analyse

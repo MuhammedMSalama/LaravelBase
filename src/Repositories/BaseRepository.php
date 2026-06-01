@@ -2,14 +2,14 @@
 
 namespace MuhammedSalama\Base\Repositories;
 
-use MuhammedSalama\Base\Interfaces\RepositoryInterface;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
+use MuhammedSalama\Base\Interfaces\RepositoryInterface;
 
 abstract class BaseRepository implements RepositoryInterface
 {
-    /**
-     * @var Model
-     */
     protected Model $model;
 
     public function __construct(Model $model)
@@ -17,72 +17,63 @@ abstract class BaseRepository implements RepositoryInterface
         $this->model = $model;
     }
 
-    /**
-     * Each child repository must define which model it works with.
-     *
-     * Example:
-     *   protected function model(): string
-     *   {
-     *       return \App\Models\Product::class;
-     *   }
-     *
-     * (Optional helper if you prefer not to inject the model manually.)
-     */
-    public function all(array $columns = ['*'], array $relations = [])
+    /** @param array<int, string> $columns @param array<int, string> $relations @return Collection<int, Model> */
+    public function all(array $columns = ['*'], array $relations = []): Collection
     {
         return $this->model->with($relations)->get($columns);
     }
 
-    public function paginate(int $perPage = 15, array $columns = ['*'], array $relations = [])
+    /** @param array<int, string> $columns @param array<int, string> $relations */
+    public function paginate(int $perPage = 15, array $columns = ['*'], array $relations = []): LengthAwarePaginator
     {
         return $this->model->with($relations)->paginate($perPage, $columns);
     }
 
-    public function find($id, array $columns = ['*'], array $relations = [])
+    /** @param array<int, string> $columns @param array<int, string> $relations */
+    public function find(int|string $id, array $columns = ['*'], array $relations = []): ?Model
     {
         return $this->model->with($relations)->find($id, $columns);
     }
 
-    public function findOrFail($id, array $columns = ['*'], array $relations = [])
+    /** @param array<int, string> $columns @param array<int, string> $relations */
+    public function findOrFail(int|string $id, array $columns = ['*'], array $relations = []): Model
     {
         return $this->model->with($relations)->findOrFail($id, $columns);
     }
 
-    public function findBy(string $column, $value, array $columns = ['*'])
+    /** @param array<int, string> $columns */
+    public function findBy(string $column, mixed $value, array $columns = ['*']): ?Model
     {
         return $this->model->where($column, $value)->first($columns);
     }
 
-    public function create(array $data)
+    /** @param array<string, mixed> $data */
+    public function create(array $data): Model
     {
         return $this->model->create($data);
     }
 
-    public function update($id, array $data)
+    /** @param array<string, mixed> $data */
+    public function update(int|string $id, array $data): Model
     {
         $record = $this->findOrFail($id);
         $record->update($data);
 
-        return $record->fresh();
+        return $record;
     }
 
-    public function delete($id): bool
+    public function delete(int|string $id): bool
     {
         $record = $this->findOrFail($id);
 
-        return (bool) $record->delete();
+        return (bool)$record->delete();
     }
 
-    public function query()
+    public function query(): Builder
     {
         return $this->model->newQuery();
     }
 
-    /**
-     * Get the underlying model instance.
-     *
-     * @return Model
-     */
     public function getModel(): Model
     {
         return $this->model;
