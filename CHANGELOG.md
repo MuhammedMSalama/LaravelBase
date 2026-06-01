@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.1.0] - 2026-06-02
+
+### Added
+- Laravel 13 compatibility (Orchestra Testbench 11, PHP ^8.3 for the L13 CI jobs).
+  - `illuminate/*` constraints were already open-ended (`>=10.0`) and continue to accept Laravel 13.
+  - `orchestra/testbench` updated to `^8.0|^9.0|^10.0|^11.0`.
+  - `phpunit/phpunit` updated to `^10.5|^11.0|^12.0` to unblock Testbench 9/10/11's
+    preference for PHPUnit 12.
+  - CI matrix gains a `13.*` Laravel axis (PHP 8.3 and 8.4 only; PHP 8.1/8.2 excluded
+    because Testbench 11 requires `^8.3`).
+
+### Fixed
+- CI badge in README was pointing to the wrong GitHub repository slug (`laravel-base` →
+  `LaravelBase`); both the `<a href>` and the `<img src>` have been corrected.
+
 ## [2.0.0] - 2026-06-01
 
 ### Breaking changes

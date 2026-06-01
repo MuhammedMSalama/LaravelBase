@@ -4,9 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="9bd039a1-d4aa-4432-bf82-343c938c6d93" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-    </list>
+    <list default="true" id="9bd039a1-d4aa-4432-bf82-343c938c6d93" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -154,7 +152,7 @@
   "keyToString": {
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.git.unshallow": "true",
-    "git-widget-placeholder": "docs/update-readme",
+    "git-widget-placeholder": "main",
     "junie.onboarding.icon.badge.shown": "true",
     "last_opened_file_path": "/home/developer/Desktop/LaravelBasePackage",
     "node.js.detected.package.eslint": "true",
@@ -193,6 +191,7 @@
       <workItem from="1780246683923" duration="286000" />
       <workItem from="1780261592482" duration="5545000" />
       <workItem from="1780295023577" duration="28000" />
+      <workItem from="1780323055156" duration="4623000" />
     </task>
     <servers />
   </component>
