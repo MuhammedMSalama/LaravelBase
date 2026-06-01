@@ -627,41 +627,51 @@ php artisan make:repository {name} [options]
 | `name` | Base name, e.g. `Product` (StudlyCase) |
 | `--model=` | Eloquent model name when it differs from `name` |
 | `--controller=` | Custom controller class name (defaults to `{Name}Controller`) |
+| `--no-model` | Skip generating the Eloquent model |
 | `--no-service` | Skip generating the Service class |
 | `--no-controller` | Skip generating the Controller class |
 | `--no-request` | Skip Form Request classes (controller falls back to plain `Request`) |
 | `--no-migration` | Skip generating the migration |
-| `--force` | Overwrite files that already exist |
+| `--provider` | Create / update `RepositoryServiceProvider` with an explicit binding |
+| `--force` | Overwrite files that already exist (never overwrites model or provider) |
 
 **Examples:**
 
 ```bash
-# Full scaffold
+# Full scaffold (creates model, interface, repository, service, requests, controller, migration)
 php artisan make:repository Product
 
-# Model with a different name
+# Wrap a model whose name differs from the resource name
 php artisan make:repository BlogPost --model=Post
 
-# Custom controller, skip migration
+# Custom controller name, skip migration
 php artisan make:repository Order --controller=OrderApiController --no-migration
 
-# Minimal: interface + repository only
+# Skip auto-generated model (e.g. model already exists or is hand-crafted)
+php artisan make:repository Invoice --no-model
+
+# Explicit RepositoryServiceProvider binding instead of auto_bind
+php artisan make:repository Product --provider
+
+# Minimal: interface + repository + model only
 php artisan make:repository Tag --no-service --no-controller --no-request --no-migration
 ```
 
 **Generated files:**
 
 ```
+app/Models/{Model}.php                           (unless --no-model; never overwritten)
 app/Interfaces/{Name}RepositoryInterface.php
 app/Repositories/{Name}Repository.php
-app/Services/{Name}Service.php              (unless --no-service)
+app/Services/{Name}Service.php                   (unless --no-service)
 app/Http/Requests/{Name}/Store{Name}Request.php  (unless --no-request)
 app/Http/Requests/{Name}/Update{Name}Request.php (unless --no-request)
-app/Http/Controllers/{Controller}.php       (unless --no-controller)
+app/Http/Controllers/{Controller}.php            (unless --no-controller)
 database/migrations/xxxx_create_{table}_table.php (unless --no-migration)
+app/Providers/RepositoryServiceProvider.php      (only with --provider; never overwritten)
 ```
 
-When `auto_bind` is enabled (the default), the interface is automatically wired to the repository — no manual binding is needed. See [Configuration](#configuration).
+When `auto_bind` is enabled (the default), the interface is automatically wired to the repository — no manual binding is needed. Use `--provider` to add an explicit `RepositoryServiceProvider` binding instead. See [Configuration](#configuration).
 
 ### `base:create-database`
 
@@ -735,6 +745,79 @@ $this->app->bind(
     \App\Repositories\ProductRepository::class,
 );
 ```
+
+### RepositoryServiceProvider (explicit bindings via `--provider`)
+
+Running `make:repository` with the `--provider` flag creates (or updates) `app/Providers/RepositoryServiceProvider.php` and inserts an explicit `$this->app->bind(…)` call for the generated interface:
+
+```bash
+php artisan make:repository Product --provider
+```
+
+**What the generated provider looks like** after two resources:
+
+```php
+namespace App\Providers;
+
+use Illuminate\Support\ServiceProvider;
+
+class RepositoryServiceProvider extends ServiceProvider
+{
+    public function register(): void
+    {
+        $this->app->bind(
+            \App\Interfaces\ProductRepositoryInterface::class,
+            \App\Repositories\ProductRepository::class,
+        );
+        $this->app->bind(
+            \App\Interfaces\OrderRepositoryInterface::class,
+            \App\Repositories\OrderRepository::class,
+        );
+        // {{ bindings }}   ← new resources are always inserted here
+    }
+}
+```
+
+**Register the provider in your application:**
+
+*Laravel 11 / 12 / 13* — add to `bootstrap/providers.php`:
+
+```php
+return [
+    App\Providers\AppServiceProvider::class,
+    App\Providers\RepositoryServiceProvider::class,  // ← add this
+];
+```
+
+*Laravel 10* — add to the `providers` array in `config/app.php`:
+
+```php
+'providers' => [
+    // ...
+    App\Providers\RepositoryServiceProvider::class,
+],
+```
+
+**Relationship with `auto_bind`:**
+
+| Scenario | Result |
+|---|---|
+| `auto_bind = true` (default), no `--provider` | Convention-based binding — no provider file needed |
+| `auto_bind = true`, `--provider` used | Both mechanisms bind the same pair; last-registered wins (identical result, harmless) |
+| `auto_bind = false`, `--provider` used | Provider is the sole binding mechanism — recommended for explicit control |
+
+When using `--provider` as the primary binding strategy, disable `auto_bind` to keep bindings in one place:
+
+```php
+// config/base.php
+'auto_bind' => false,
+```
+
+**Idempotency guarantees:**
+
+- Re-running `make:repository Product --provider` will not add a duplicate binding.
+- The provider file is never overwritten, even with `--force`.
+- The model file is never overwritten, even with `--force`.
 
 ---
 

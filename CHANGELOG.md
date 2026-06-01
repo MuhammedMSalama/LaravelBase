@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.2.0] - 2026-06-02
+
+### Added
+- `make:repository` now generates the Eloquent model automatically when it does not
+  exist (`app/Models/{Model}.php`). The generated model has `protected $guarded = []`
+  with a TODO comment so `create()`/`update()` work out of the box. The model is
+  **never overwritten** regardless of `--force`; pass `--no-model` to skip generation
+  entirely.
+- `--no-model` option: skip Eloquent model generation.
+- `--provider` option: create (or update in place) `app/Providers/RepositoryServiceProvider.php`
+  and insert an explicit `$this->app->bind(…)` for the generated interface/repository pair.
+  - The provider is generated once and never overwritten.
+  - Bindings are idempotent — re-running for the same name will not duplicate entries.
+  - New bindings are inserted above a persistent `// {{ bindings }}` marker so the
+    insertion point is always predictable.
+  - The command prints the exact line to add to `bootstrap/providers.php` (Laravel 11+)
+    or `config/app.php` (Laravel 10).
+  - When both `auto_bind` and `--provider` are active the bindings are identical and
+    harmless; set `auto_bind => false` in `config/base.php` to make the provider the
+    sole binding mechanism.
+- New stubs: `model.stub`, `repository-service-provider.stub`.
+- 10 new tests covering model creation, model preservation, `--no-model` skip,
+  `--force` not overwriting the model, provider creation, binding append, no-duplicate
+  guarantee, existing provider preservation, and `--provider`-absent guard.
+
 ## [2.1.0] - 2026-06-02
 
 ### Added
