@@ -26,12 +26,14 @@ class {{ controller }} extends Controller
 
     public function store(Request $request)
     {
-        return $this->created($this->service->store($request->all()));
+        // TODO: add validation — e.g. $request->validate(['field' => 'required|string'])
+        return $this->created($this->service->store($request->except(['_token', '_method'])));
     }
 
     public function update(Request $request, $id)
     {
-        return $this->success($this->service->update($id, $request->all()));
+        // TODO: add validation — e.g. $request->validate(['field' => 'sometimes|string'])
+        return $this->success($this->service->update($id, $request->except(['_token', '_method'])));
     }
 
     public function destroy($id)

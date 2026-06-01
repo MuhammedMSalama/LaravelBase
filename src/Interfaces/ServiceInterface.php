@@ -2,17 +2,43 @@
 
 namespace MuhammedSalama\Base\Interfaces;
 
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Model;
+
 interface ServiceInterface
 {
-    public function all(array $columns = ['*'], array $relations = []);
+    /**
+     * @param array<int, string> $columns
+     * @param array<int, string> $relations
+     * @return Collection<int, Model>
+     */
+    public function all(array $columns = ['*'], array $relations = []): Collection;
 
-    public function paginate(int $perPage = 15, array $columns = ['*'], array $relations = []);
+    /**
+     * @param array<int, string> $columns
+     * @param array<int, string> $relations
+     */
+    public function paginate(int $perPage = 15, array $columns = ['*'], array $relations = []): LengthAwarePaginator;
 
-    public function find($id, array $columns = ['*'], array $relations = []);
+    /**
+     * Find by primary key or throw ModelNotFoundException.
+     *
+     * @param array<int, string> $columns
+     * @param array<int, string> $relations
+     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
+     */
+    public function find(int|string $id, array $columns = ['*'], array $relations = []): Model;
 
-    public function store(array $data);
+    /**
+     * @param array<string, mixed> $data
+     */
+    public function store(array $data): Model;
 
-    public function update($id, array $data);
+    /**
+     * @param array<string, mixed> $data
+     */
+    public function update(int|string $id, array $data): Model;
 
-    public function destroy($id): bool;
+    public function destroy(int|string $id): bool;
 }

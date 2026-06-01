@@ -33,27 +33,26 @@ class MakeRepositoryCommand extends Command
 
     public function handle(): int
     {
-        $class = Str::studly((string) $this->argument('name'));
-        $model = Str::studly((string) ($this->option('model') ?: $class));
+        $class = Str::studly((string)$this->argument('name'));
+        $model = Str::studly((string)($this->option('model') ?: $class));
 
-        $rootNamespace  = $this->laravel->getNamespace();          // e.g. "App\"
+        $rootNamespace = $this->laravel->getNamespace();          // e.g. "App\"
         $modelNamespace = $rootNamespace . 'Models\\' . $model;     // e.g. "App\Models\Product"
 
-        $controller = (string) ($this->option('controller') ?: "{$class}Controller");
+        $controller = (string)($this->option('controller') ?: "{$class}Controller");
         $controller = Str::studly($controller);
-        if (! Str::endsWith($controller, 'Controller')) {
+        if (!Str::endsWith($controller, 'Controller')) {
             $controller .= 'Controller';
         }
 
         $replacements = [
-            '{{ class }}'          => $class,
-            '{{ rootNamespace }}'  => $rootNamespace,
-            '{{ model }}'          => $model,
+            '{{ class }}' => $class,
+            '{{ rootNamespace }}' => $rootNamespace,
+            '{{ model }}' => $model,
             '{{ modelNamespace }}' => $modelNamespace,
-            '{{ controller }}'     => $controller,
+            '{{ controller }}' => $controller,
         ];
 
-        // Interface
         $this->generate(
             'interface.stub',
             app_path("Interfaces/{$class}RepositoryInterface.php"),
@@ -61,7 +60,6 @@ class MakeRepositoryCommand extends Command
             'Interface'
         );
 
-        // Repository
         $this->generate(
             'repository.stub',
             app_path("Repositories/{$class}Repository.php"),
@@ -69,8 +67,7 @@ class MakeRepositoryCommand extends Command
             'Repository'
         );
 
-        // Service (optional)
-        if (! $this->option('no-service')) {
+        if (!$this->option('no-service')) {
             $this->generate(
                 'service.stub',
                 app_path("Services/{$class}Service.php"),
@@ -79,8 +76,7 @@ class MakeRepositoryCommand extends Command
             );
         }
 
-        // Form Requests (optional)
-        $withRequests = ! $this->option('no-request');
+        $withRequests = !$this->option('no-request');
         if ($withRequests) {
             foreach (["Store{$class}Request", "Update{$class}Request"] as $request) {
                 $this->generate(
@@ -92,8 +88,7 @@ class MakeRepositoryCommand extends Command
             }
         }
 
-        // Controller (optional) — uses form requests when they were generated.
-        if (! $this->option('no-controller')) {
+        if (!$this->option('no-controller')) {
             $this->generate(
                 $withRequests ? 'controller.stub' : 'controller.plain.stub',
                 app_path("Http/Controllers/{$controller}.php"),
@@ -102,8 +97,7 @@ class MakeRepositoryCommand extends Command
             );
         }
 
-        // Migration (optional)
-        if (! $this->option('no-migration')) {
+        if (!$this->option('no-migration')) {
             $this->makeMigration($class);
         }
 
@@ -128,13 +122,13 @@ class MakeRepositoryCommand extends Command
         $table = Str::snake(Str::pluralStudly($class));
 
         $existing = glob(database_path("migrations/*_create_{$table}_table.php"));
-        if (! empty($existing) && ! $this->option('force')) {
+        if (!empty($existing) && !$this->option('force')) {
             $this->warn("•  Migration for table '{$table}' already exists, skipped.");
             return;
         }
 
         $this->call('make:migration', [
-            'name'     => "create_{$table}_table",
+            'name' => "create_{$table}_table",
             '--create' => $table,
         ]);
     }
@@ -144,7 +138,7 @@ class MakeRepositoryCommand extends Command
      */
     protected function generate(string $stub, string $target, array $replacements, string $label): void
     {
-        if ($this->files->exists($target) && ! $this->option('force')) {
+        if ($this->files->exists($target) && !$this->option('force')) {
             $this->warn("•  {$label} already exists, skipped: " . $this->relative($target));
             return;
         }

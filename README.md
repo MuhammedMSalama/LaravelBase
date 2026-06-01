@@ -1,75 +1,99 @@
 <h1 align="center">Laravel Base</h1>
 
 <p align="center">
-  A lightweight, framework-version-agnostic Laravel package that ships a clean, opinionated architecture out of the box —
-  <strong>Interfaces, Repositories, Services, external Form-Request validation, Helpers (ApiResponse), and Traits</strong>.
+  <strong>Repository–Service scaffolding, consistent API responses, and image handling for Laravel 10+.</strong><br>
+  Stop rewriting boilerplate — extend a small set of tested base classes and focus on business logic.
 </p>
 
 <p align="center">
-  <a href="https://packagist.org/packages/muhammedsalama/laravel-base"><img src="https://img.shields.io/packagist/v/muhammedsalama/laravel-base?style=flat-square" alt="Latest Version"></a>
-  <a href="https://packagist.org/packages/muhammedsalama/laravel-base"><img src="https://img.shields.io/packagist/dt/muhammedsalama/laravel-base?style=flat-square" alt="Total Downloads"></a>
-  <a href="https://packagist.org/packages/muhammedsalama/laravel-base"><img src="https://img.shields.io/packagist/php-v/muhammedsalama/laravel-base?style=flat-square" alt="PHP Version"></a>
-  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green?style=flat-square" alt="License: MIT"></a>
+  <a href="https://packagist.org/packages/muhammedsalama/laravel-base">
+    <img src="https://img.shields.io/packagist/v/muhammedsalama/laravel-base?style=flat-square" alt="Latest Version on Packagist">
+  </a>
+  <a href="https://packagist.org/packages/muhammedsalama/laravel-base">
+    <img src="https://img.shields.io/packagist/dt/muhammedsalama/laravel-base?style=flat-square" alt="Total Downloads">
+  </a>
+  <a href="https://packagist.org/packages/muhammedsalama/laravel-base">
+    <img src="https://img.shields.io/packagist/php-v/muhammedsalama/laravel-base?style=flat-square" alt="PHP Version">
+  </a>
+  <a href="LICENSE">
+    <img src="https://img.shields.io/badge/license-MIT-green?style=flat-square" alt="License: MIT">
+  </a>
+  <a href="https://github.com/Muhammed2024Salama/laravel-base/actions">
+    <img src="https://img.shields.io/github/actions/workflow/status/Muhammed2024Salama/laravel-base/ci.yml?branch=main&style=flat-square&label=CI" alt="CI">
+  </a>
 </p>
 
 ---
 
 ## Table of Contents
 
-- [About](#about)
+- [Why use this?](#why-use-this)
 - [Features](#features)
 - [Requirements](#requirements)
 - [Installation](#installation)
-- [Package Structure](#package-structure)
+- [Quick Start](#quick-start)
+- [Architecture overview](#architecture-overview)
 - [Usage](#usage)
-  - [1. Create an Interface](#1-create-an-interface)
-  - [2. Create a Repository](#2-create-a-repository)
-  - [3. Create a Service](#3-create-a-service)
-  - [4. Create Form Requests (External Validation)](#4-create-form-requests-external-validation)
-  - [5. Register the Binding](#5-register-the-binding)
-  - [6. Use It in a Controller](#6-use-it-in-a-controller)
+  - [1. Generator command](#1-generator-command-make-repository)
+  - [2. Manual setup](#2-manual-setup)
+    - [Interface](#interface)
+    - [Repository](#repository)
+    - [Service](#service)
+    - [Form Requests](#form-requests)
+    - [Controller](#controller)
 - [API Reference](#api-reference)
   - [RepositoryInterface](#repositoryinterface)
+  - [BaseRepository](#baserepository)
   - [ServiceInterface](#serviceinterface)
+  - [BaseService](#baseservice)
   - [BaseRequest](#baserequest)
-  - [ApiResponse Helper](#apiresponse-helper)
+  - [ApiResponse](#apiresponse)
+  - [ApiResponseTrait](#apiresponsetrait)
   - [ImageUploadTrait](#imageuploadtrait)
+- [Commands](#commands)
+  - [make:repository](#makerepository)
+  - [base:create-database](#basecreate-database)
 - [Configuration](#configuration)
-- [Publishing to Packagist](#publishing-to-packagist)
+- [Publishing helpers and traits](#publishing-helpers-and-traits)
+- [Testing and static analysis](#testing-and-static-analysis)
+- [Troubleshooting](#troubleshooting)
+- [Changelog](#changelog)
+- [Contributing](#contributing)
+- [Security](#security)
 - [License](#license)
 - [Author](#author)
 
 ---
 
-## About
+## Why use this?
 
-**Laravel Base** removes the repetitive boilerplate of setting up the Repository–Service pattern in every new project. Instead of rewriting the same base classes, contracts, and helpers over and over, you extend a small set of well-tested base components and focus on your business logic.
-
-It keeps validation **outside** the controller through dedicated Form Request classes, and bundles two everyday utilities: a consistent **JSON API response** layer and a battle-tested **image upload trait**.
-
-The package is intentionally **not tied to a specific Laravel release** — it works with Laravel 10 and every version after it.
+Every Laravel API project ends up writing the same base classes: a `BaseRepository` with CRUD methods, a `BaseService` that wraps it, a `FormRequest` that returns JSON errors instead of redirecting, and a handful of response-shape helpers. This package ships all of that once, tested and type-safe, so you extend rather than copy-paste.
 
 ---
 
 ## Features
 
-- **Repository pattern** — a fully implemented `BaseRepository` with CRUD, eager loading, pagination, and query access.
-- **Service layer** — a `BaseService` that wraps any repository and keeps controllers thin.
-- **Contracts first** — `RepositoryInterface` and `ServiceInterface` to keep your code decoupled and testable.
-- **External validation** — a `BaseRequest` (Form Request) that moves validation out of controllers and returns failures in the standard API envelope automatically.
-- **Consistent API responses** — a static `ApiResponse` helper plus an `ApiResponseTrait` for controllers, both producing an identical JSON envelope.
-- **Image handling** — upload, multi-upload, update (auto-deletes the old file), and delete via `ImageUploadTrait`.
-- **Framework-agnostic** — no upper bound on the Laravel version.
-- **Auto-discovery** — the service provider registers automatically; bindings are configurable.
+| Feature | Details |
+|---|---|
+| **Repository pattern** | `BaseRepository` with `all`, `paginate`, `find`, `findOrFail`, `findBy`, `create`, `update`, `delete`, and `query` |
+| **Service layer** | `BaseService` that wraps any repository and keeps controllers thin |
+| **Contracts-first design** | `RepositoryInterface` and `ServiceInterface` with full native type hints |
+| **External validation** | `BaseRequest` (Form Request) moves validation out of controllers and returns a standard `422` JSON envelope on failure |
+| **Consistent API responses** | Static `ApiResponse` helper and an `ApiResponseTrait` for controllers — identical JSON shape |
+| **Image handling** | Upload, multi-upload, update (auto-deletes the old file), and delete via `ImageUploadTrait` |
+| **Scaffold generator** | `make:repository` creates Interface, Repository, Service, Form Requests, Controller, and migration in one command |
+| **Database creator** | `base:create-database` creates the configured MySQL or PostgreSQL database if it does not exist |
+| **Auto-binding** | Interfaces are automatically bound to their repositories by naming convention — no manual registration needed |
+| **Laravel 10/11/12, PHP 8.1+** | No upper-bound constraint on the Laravel version |
 
 ---
 
 ## Requirements
 
-| Dependency | Version              |
-| ---------- | -------------------- |
-| PHP        | `^8.1`               |
-| Laravel    | `10.0` and above     |
+| Dependency | Version |
+|---|---|
+| PHP | `^8.1` |
+| Laravel | `10.x` and above |
 
 ---
 
@@ -81,18 +105,12 @@ The package is intentionally **not tied to a specific Laravel release** — it w
 composer require muhammedsalama/laravel-base
 ```
 
-That's it — the service provider is registered automatically through Laravel's package auto-discovery.
-
-Publish the configuration file (optional):
-
-```bash
-php artisan vendor:publish --tag=base-config
-```
+The service provider is registered automatically through Laravel's package auto-discovery. No manual configuration is needed to get started.
 
 <details>
-<summary>Alternative: install directly from GitHub (VCS)</summary>
+<summary>Install directly from GitHub (VCS repository)</summary>
 
-Add the repository to your project's `composer.json`:
+Add the repository entry to your project's `composer.json`, then require the package:
 
 ```json
 "repositories": [
@@ -110,7 +128,7 @@ composer require muhammedsalama/laravel-base:^1.0
 </details>
 
 <details>
-<summary>Alternative: install from a local path (for development)</summary>
+<summary>Install from a local path (package development)</summary>
 
 ```json
 "repositories": [
@@ -132,98 +150,80 @@ composer require muhammedsalama/laravel-base
 
 ---
 
-## Package Structure
+## Quick Start
 
-```
-src/
-├── BaseServiceProvider.php
-├── Console/
-│   ├── Commands/
-│   │   └── MakeRepositoryCommand.php
-│   └── Stubs/
-│       ├── interface.stub
-│       ├── repository.stub
-│       ├── service.stub
-│       └── controller.stub
-├── Interfaces/
-│   ├── RepositoryInterface.php
-│   └── ServiceInterface.php
-├── Repositories/
-│   └── BaseRepository.php
-├── Services/
-│   └── BaseService.php
-├── Requests/
-│   └── BaseRequest.php
-├── Helpers/
-│   └── ApiResponse.php
-└── Traits/
-    ├── ApiResponseTrait.php
-    └── ImageUploadTrait.php
-stubs/app/            # editable copies for vendor:publish
-├── Helpers/
-│   └── ApiResponse.php
-└── Traits/
-    ├── ApiResponseTrait.php
-    └── ImageUploadTrait.php
-config/
-└── base.php
-```
-
----
-
-## Usage
-
-### Quick start with the generator
-
-Scaffold the whole structure for a resource with a single command:
+Scaffold a fully-wired `Product` resource in one command:
 
 ```bash
 php artisan make:repository Product
 ```
 
-This generates:
+That's it. The command creates:
 
 ```
-app/Interfaces/ProductRepositoryInterface.php
-app/Repositories/ProductRepository.php
-app/Services/ProductService.php
-app/Http/Requests/Product/StoreProductRequest.php
-app/Http/Requests/Product/UpdateProductRequest.php
-app/Http/Controllers/ProductController.php
-database/migrations/xxxx_create_products_table.php
+app/
+  Interfaces/ProductRepositoryInterface.php
+  Repositories/ProductRepository.php
+  Services/ProductService.php
+  Http/
+    Requests/Product/
+      StoreProductRequest.php
+      UpdateProductRequest.php
+    Controllers/ProductController.php
+database/migrations/xxxx_xx_xx_create_products_table.php
 ```
 
-The generated controller is fully wired: it injects the service, uses `ApiResponseTrait`, type-hints the generated Form Requests, and ships with `index`, `show`, `store`, `update`, and `destroy`. Validation lives in the request classes (extending `BaseRequest`), so failures return the standard `422` envelope automatically.
+Register the resource routes, add your `$fillable` to the `Product` model, and you have a working CRUD API with consistent JSON responses and request validation — no other steps required (auto-binding wires the interface to the repository automatically).
 
-Options:
+---
 
-| Option                        | Description                                                  |
-| ----------------------------- | ------------------------------------------------------------ |
-| `--model=Post`                | Wrap a model whose name differs from the argument.           |
-| `--controller=BlogController` | Use a custom controller name (defaults to `{Name}Controller`). |
-| `--no-service`                | Skip generating the Service class.                           |
-| `--no-controller`             | Skip generating the Controller class.                        |
-| `--no-request`                | Skip the Form Request classes (controller falls back to a plain `Request`). |
-| `--no-migration`              | Skip generating the migration.                               |
-| `--force`                     | Overwrite existing files.                                    |
+## Architecture overview
 
-Examples:
+```
+HTTP Request
+    │
+    ▼
+Controller          (thin — delegates everything)
+    │  uses ApiResponseTrait
+    │  type-hints Form Request
+    ▼
+Service             (business logic lives here)
+    │  extends BaseService
+    │  depends on RepositoryInterface
+    ▼
+Repository          (data access)
+    │  extends BaseRepository
+    │  wraps an Eloquent Model
+    ▼
+Database
+```
+
+Validation failures are caught by `BaseRequest::failedValidation()` before the controller is ever called, and the response is returned in the standard JSON envelope automatically.
+
+---
+
+## Usage
+
+### 1. Generator command: `make:repository`
+
+See the full [Commands → make:repository](#makerepository) reference below. A quick example:
 
 ```bash
-php artisan make:repository Post                          # full set
-php artisan make:repository Post --controller=BlogController
-php artisan make:repository Post --no-request --no-migration
+# Full set: interface, repository, service, requests, controller, migration
+php artisan make:repository Product
+
+# Wrap a differently-named model
+php artisan make:repository Post --model=Article
+
+# Custom controller name; skip migration
+php artisan make:repository Invoice --controller=InvoiceApiController --no-migration
 ```
 
-Thanks to **auto-binding**, the generated interface is wired to its repository automatically — you can inject `ProductService` (or `ProductRepositoryInterface`) right away, no manual binding required.
+### 2. Manual setup
 
-> Auto-binding follows the convention `App\Interfaces\{Name}RepositoryInterface` → `App\Repositories\{Name}Repository`. Disable it by setting `auto_bind => false` in `config/base.php`, then register bindings manually (see below).
+The following shows how to wire a `Product` resource by hand.
 
-### Manual setup
-
-If you prefer to create the files yourself, the following walks through wiring a complete `Product` resource from contract to controller.
-
-### 1. Create an Interface
+#### Interface
 
 ```php
 namespace App\Interfaces;
@@ -232,29 +232,29 @@ use MuhammedSalama\Base\Interfaces\RepositoryInterface;
 
 interface ProductRepositoryInterface extends RepositoryInterface
 {
-    // Add Product-specific query methods here if needed.
+    // Add product-specific query methods here when needed.
 }
 ```
 
-### 2. Create a Repository
+#### Repository
 
 ```php
 namespace App\Repositories;
 
-use App\Models\Product;
 use App\Interfaces\ProductRepositoryInterface;
+use App\Models\Product;
 use MuhammedSalama\Base\Repositories\BaseRepository;
 
 class ProductRepository extends BaseRepository implements ProductRepositoryInterface
 {
-    public function __construct(Product $product)
+    public function __construct(Product $model)
     {
-        parent::__construct($product);
+        parent::__construct($model);
     }
 }
 ```
 
-### 3. Create a Service
+#### Service
 
 ```php
 namespace App\Services;
@@ -271,9 +271,9 @@ class ProductService extends BaseService
 }
 ```
 
-### 4. Create Form Requests (External Validation)
+#### Form Requests
 
-Validation lives in its own classes, not in the controller. Extend the package's `BaseRequest`, which automatically returns a consistent JSON envelope (`422`) on failure.
+Validation lives in its own classes. Extend `BaseRequest`, which automatically returns the standard `422` envelope on failure — no extra code needed.
 
 ```php
 namespace App\Http\Requests\Product;
@@ -311,7 +311,7 @@ class UpdateProductRequest extends BaseRequest
 }
 ```
 
-A failed validation response looks like:
+A failed validation response:
 
 ```json
 {
@@ -323,21 +323,7 @@ A failed validation response looks like:
 }
 ```
 
-### 5. Register the Binding
-
-Map the interface to its implementation in `config/base.php`:
-
-```php
-'bindings' => [
-    \App\Interfaces\ProductRepositoryInterface::class => \App\Repositories\ProductRepository::class,
-],
-```
-
-> You may also bind it in your own `AppServiceProvider` if you prefer.
-
-### 6. Use It in a Controller
-
-The controller stays thin: validation is type-hinted, business logic lives in the service, responses are consistent.
+#### Controller
 
 ```php
 namespace App\Http\Controllers\Api;
@@ -360,7 +346,7 @@ class ProductController extends Controller
         return $this->paginated($this->service->paginate(15));
     }
 
-    public function show($id)
+    public function show(int $id)
     {
         return $this->success($this->service->find($id));
     }
@@ -373,12 +359,12 @@ class ProductController extends Controller
         return $this->created($this->service->store($data));
     }
 
-    public function update(UpdateProductRequest $request, $id)
+    public function update(UpdateProductRequest $request, int $id)
     {
         return $this->success($this->service->update($id, $request->validated()));
     }
 
-    public function destroy($id)
+    public function destroy(int $id)
     {
         $this->service->destroy($id);
 
@@ -393,168 +379,447 @@ class ProductController extends Controller
 
 ### RepositoryInterface
 
-| Method                                     | Description                                      |
-| ------------------------------------------ | ------------------------------------------------ |
-| `all($columns, $relations)`                | Get all records.                                 |
-| `paginate($perPage, $columns, $relations)` | Get paginated records.                           |
-| `find($id, $columns, $relations)`          | Find by primary key (returns `null` if absent).  |
-| `findOrFail($id, $columns, $relations)`    | Find by primary key or throw.                    |
-| `findBy($column, $value, $columns)`        | Find the first record matching a column.         |
-| `create($data)`                            | Create a new record.                             |
-| `update($id, $data)`                       | Update an existing record.                       |
-| `delete($id)`                              | Delete a record.                                 |
-| `query()`                                  | Get a fresh query builder for custom queries.    |
+`MuhammedSalama\Base\Interfaces\RepositoryInterface`
+
+| Method | Signature | Returns | Notes |
+|---|---|---|---|
+| `all` | `all(array $columns, array $relations): Collection` | `Collection<int, Model>` | Eager-loads `$relations` |
+| `paginate` | `paginate(int $perPage, array $columns, array $relations): LengthAwarePaginator` | `LengthAwarePaginator` | |
+| `find` | `find(int\|string $id, array $columns, array $relations): ?Model` | `Model\|null` | Returns `null` when not found |
+| `findOrFail` | `findOrFail(int\|string $id, array $columns, array $relations): Model` | `Model` | Throws `ModelNotFoundException` |
+| `findBy` | `findBy(string $column, mixed $value, array $columns): ?Model` | `Model\|null` | First match |
+| `create` | `create(array $data): Model` | `Model` | Respects `$fillable`/`$guarded` |
+| `update` | `update(int\|string $id, array $data): Model` | `Model` | Finds, updates, returns model |
+| `delete` | `delete(int\|string $id): bool` | `bool` | Throws `ModelNotFoundException` if absent |
+| `query` | `query(): Builder` | `Builder` | Fresh query builder for complex queries |
+
+### BaseRepository
+
+`MuhammedSalama\Base\Repositories\BaseRepository`
+
+Implements `RepositoryInterface`. Extend it and inject the Eloquent model via the constructor:
+
+```php
+class ProductRepository extends BaseRepository implements ProductRepositoryInterface
+{
+    public function __construct(Product $model)
+    {
+        parent::__construct($model);
+    }
+}
+```
+
+Additional helper not in the interface:
+
+| Method | Signature | Returns |
+|---|---|---|
+| `getModel` | `getModel(): Model` | The raw model instance |
+
+**Important:** The model's `$fillable` or `$guarded` controls which attributes can be mass-assigned via `create()` and `update()`. Always define one in your Eloquent model.
 
 ### ServiceInterface
 
-| Method                                     | Description                 |
-| ------------------------------------------ | --------------------------- |
-| `all($columns, $relations)`                | Delegate to the repository. |
-| `paginate($perPage, $columns, $relations)` | Delegate to the repository. |
-| `find($id, $columns, $relations)`          | Find or fail.               |
-| `store($data)`                             | Create a record.            |
-| `update($id, $data)`                       | Update a record.            |
-| `destroy($id)`                             | Delete a record.            |
+`MuhammedSalama\Base\Interfaces\ServiceInterface`
+
+| Method | Signature | Returns | Notes |
+|---|---|---|---|
+| `all` | `all(array $columns, array $relations): Collection` | `Collection<int, Model>` | |
+| `paginate` | `paginate(int $perPage, array $columns, array $relations): LengthAwarePaginator` | `LengthAwarePaginator` | |
+| `find` | `find(int\|string $id, array $columns, array $relations): Model` | `Model` | Always throws on missing (calls `findOrFail`) |
+| `store` | `store(array $data): Model` | `Model` | |
+| `update` | `update(int\|string $id, array $data): Model` | `Model` | |
+| `destroy` | `destroy(int\|string $id): bool` | `bool` | |
+
+### BaseService
+
+`MuhammedSalama\Base\Services\BaseService`
+
+Implements `ServiceInterface`. Extend it and inject the repository interface:
+
+```php
+class ProductService extends BaseService
+{
+    public function __construct(ProductRepositoryInterface $repository)
+    {
+        parent::__construct($repository);
+    }
+}
+```
+
+Additional helper not in the interface:
+
+| Method | Returns | Notes |
+|---|---|---|
+| `repository(): RepositoryInterface` | `RepositoryInterface` | Access the underlying repository for custom queries |
 
 ### BaseRequest
 
-Extend this abstract Form Request to keep validation outside controllers.
+`MuhammedSalama\Base\Requests\BaseRequest`
 
-| Member                          | Description                                                          |
-| ------------------------------- | -------------------------------------------------------------------- |
-| `authorize()`                   | Returns `true` by default. Override for gate/policy checks.          |
-| `rules()` *(abstract)*          | Define your validation rules in the child request.                   |
-| `failedValidation($validator)`  | Throws an `HttpResponseException` with the standard `422` envelope.  |
+Extends `Illuminate\Foundation\Http\FormRequest`. Override `rules()` in your child class.
 
-### ApiResponse Helper
+| Member | Type | Default | Notes |
+|---|---|---|---|
+| `authorize()` | `bool` | `true` | Override to add gate/policy checks |
+| `rules()` | `array` (abstract) | — | Define validation rules |
+| `failedValidation(Validator $v)` | `void` | — | Throws `HttpResponseException` with the `422` envelope |
 
-Use the static helper directly, or the `ApiResponseTrait` inside controllers — both return the same envelope.
+```php
+class StoreProductRequest extends BaseRequest
+{
+    public function rules(): array
+    {
+        return ['name' => 'required|string|max:255'];
+    }
+}
+```
+
+### ApiResponse
+
+`MuhammedSalama\Base\Helpers\ApiResponse`
+
+Static helper. All methods return `Illuminate\Http\JsonResponse`.
 
 ```php
 use MuhammedSalama\Base\Helpers\ApiResponse;
 
-ApiResponse::success($data, 'Success', 200);
+// Success (200)
+ApiResponse::success($data, 'Custom message');
+
+// Created (201)
 ApiResponse::created($data);
-ApiResponse::error('Something went wrong', 400, $errors);
-ApiResponse::validation($errors);
-ApiResponse::notFound();
-ApiResponse::unauthorized();
-ApiResponse::forbidden();
-ApiResponse::paginated($paginator);
+
+// No Content (204)
 ApiResponse::noContent();
+
+// Error (default 400)
+ApiResponse::error('Something went wrong', 400, $errorDetails);
+
+// Validation (422)
+ApiResponse::validation($validator->errors());
+
+// Not Found (404)
+ApiResponse::notFound('Product not found');
+
+// Unauthorized (401)
+ApiResponse::unauthorized();
+
+// Forbidden (403)
+ApiResponse::forbidden();
+
+// Paginated (200, includes meta block)
+ApiResponse::paginated($paginator, 'Success');
 ```
 
-**Standard JSON envelope:**
+**Standard success envelope:**
 
 ```json
 {
     "status": true,
     "message": "Success",
-    "data": {}
+    "data": { ... }
 }
 ```
 
-### ImageUploadTrait
+**Standard error envelope:**
 
-| Method                                           | Returns        | Description                                      |
-| ------------------------------------------------ | -------------- | ------------------------------------------------ |
-| `uploadImage($request, $input, $path)`           | `string\|void` | Store a single image, returns its relative path. |
-| `uploadMultiImage($request, $input, $path)`      | `array\|void`  | Store multiple images, returns their paths.      |
-| `updateImage($request, $input, $path, $oldPath)` | `string\|void` | Replace an image and delete the old one.         |
-| `deleteImage($path)`                             | `void`         | Delete an image from disk.                       |
+```json
+{
+    "status": false,
+    "message": "Validation error",
+    "errors": {
+        "name": ["The name field is required."]
+    }
+}
+```
+
+**Paginated envelope:**
+
+```json
+{
+    "status": true,
+    "message": "Success",
+    "data": [ ... ],
+    "meta": {
+        "current_page": 1,
+        "last_page": 5,
+        "per_page": 15,
+        "total": 72
+    }
+}
+```
+
+### ApiResponseTrait
+
+`MuhammedSalama\Base\Traits\ApiResponseTrait`
+
+Use inside controllers to call response methods as `$this->success(...)` instead of the static `ApiResponse::success(...)`. Both produce the identical JSON envelope.
 
 ```php
+use MuhammedSalama\Base\Traits\ApiResponseTrait;
+
+class ProductController extends Controller
+{
+    use ApiResponseTrait;
+
+    public function index()
+    {
+        return $this->success($data);
+    }
+}
+```
+
+| Method | Parameters | HTTP status |
+|---|---|---|
+| `success` | `($data, $message, $code)` | 200 (default) |
+| `created` | `($data, $message)` | 201 |
+| `error` | `($message, $code, $errors)` | 400 (default) |
+| `validationError` | `($errors, $message)` | 422 |
+| `notFound` | `($message)` | 404 |
+| `unauthorized` | `($message)` | 401 |
+| `forbidden` | `($message)` | 403 |
+| `paginated` | `($paginator, $message)` | 200 |
+
+### ImageUploadTrait
+
+`MuhammedSalama\Base\Traits\ImageUploadTrait`
+
+Use inside controllers or services. Files are stored under `public_path($path)` and the relative path is returned. Extensions are determined from the file's actual MIME type (not the client-supplied filename), protecting against extension-spoofing attacks.
+
+| Method | Returns | Description |
+|---|---|---|
+| `uploadImage($request, $input, $path)` | `string\|null` | Store a single image |
+| `uploadMultiImage($request, $input, $path)` | `array<int, string>` | Store multiple images |
+| `updateImage($request, $input, $path, $oldPath)` | `string\|null` | Replace an image, deletes the old file |
+| `deleteImage($path)` | `void` | Delete an image |
+
+```php
+// Store
 $path = $this->uploadImage($request, 'image', 'uploads/products');
+
+// Replace (old file is deleted automatically)
 $path = $this->updateImage($request, 'image', 'uploads/products', $product->image);
+
+// Delete
 $this->deleteImage($product->image);
 ```
 
----
+Always validate uploads in your Form Request before calling these methods:
 
-## Creating the Database
-
-The package can create your database if it doesn't exist yet, using whichever driver is set in your `.env` (MySQL or PostgreSQL):
-
-```bash
-php artisan base:create-database
+```php
+'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
 ```
 
-It reads the default connection from `config/database.php`, and:
+---
 
-- if the database already exists, it does nothing;
-- if it doesn't, it creates it using the proper syntax for the driver — MySQL with the configured charset/collation, PostgreSQL with the configured encoding.
+## Commands
 
-Use a non-default connection with `--connection`:
+### `make:repository`
+
+Generates the full Repository–Service–Controller structure for a named resource.
 
 ```bash
+php artisan make:repository {name} [options]
+```
+
+| Argument / Option | Description |
+|---|---|
+| `name` | Base name, e.g. `Product` (StudlyCase) |
+| `--model=` | Eloquent model name when it differs from `name` |
+| `--controller=` | Custom controller class name (defaults to `{Name}Controller`) |
+| `--no-service` | Skip generating the Service class |
+| `--no-controller` | Skip generating the Controller class |
+| `--no-request` | Skip Form Request classes (controller falls back to plain `Request`) |
+| `--no-migration` | Skip generating the migration |
+| `--force` | Overwrite files that already exist |
+
+**Examples:**
+
+```bash
+# Full scaffold
+php artisan make:repository Product
+
+# Model with a different name
+php artisan make:repository BlogPost --model=Post
+
+# Custom controller, skip migration
+php artisan make:repository Order --controller=OrderApiController --no-migration
+
+# Minimal: interface + repository only
+php artisan make:repository Tag --no-service --no-controller --no-request --no-migration
+```
+
+**Generated files:**
+
+```
+app/Interfaces/{Name}RepositoryInterface.php
+app/Repositories/{Name}Repository.php
+app/Services/{Name}Service.php              (unless --no-service)
+app/Http/Requests/{Name}/Store{Name}Request.php  (unless --no-request)
+app/Http/Requests/{Name}/Update{Name}Request.php (unless --no-request)
+app/Http/Controllers/{Controller}.php       (unless --no-controller)
+database/migrations/xxxx_create_{table}_table.php (unless --no-migration)
+```
+
+When `auto_bind` is enabled (the default), the interface is automatically wired to the repository — no manual binding is needed. See [Configuration](#configuration).
+
+### `base:create-database`
+
+Creates the configured database if it does not already exist. Supports MySQL and PostgreSQL.
+
+```bash
+php artisan base:create-database [--connection=]
+```
+
+| Option | Description |
+|---|---|
+| `--connection=` | Laravel database connection name (defaults to `database.default`) |
+
+```bash
+# Use the default connection
+php artisan base:create-database
+
+# Use a specific connection
 php artisan base:create-database --connection=pgsql
 ```
 
-> Requires the matching PDO driver (`pdo_mysql` / `pdo_pgsql`) and a DB user with `CREATE DATABASE` privileges. Only `mysql` and `pgsql` are supported.
-
----
-
-## Publishing the Helper & Traits
-
-By default the `ApiResponse` helper and the traits are used directly from the package namespace (`use MuhammedSalama\Base\Helpers\ApiResponse;`) — no copying needed, and you get updates for free.
-
-If you want **editable local copies** inside your app (with the correct `App\` namespace), publish them:
-
-```bash
-php artisan vendor:publish --tag=base-helpers   # -> app/Helpers/ApiResponse.php
-php artisan vendor:publish --tag=base-traits    # -> app/Traits/ApiResponseTrait.php, app/Traits/ImageUploadTrait.php
-php artisan vendor:publish --tag=base-config     # -> config/base.php
-```
-
-The published files use the `App\Helpers` / `App\Traits` namespaces, so you can edit them freely. Switch your imports to `App\Helpers\ApiResponse` / `App\Traits\...` if you go this route.
+- If the database already exists the command does nothing and exits successfully.
+- MySQL: uses the `charset` and `collation` from the connection config.
+- PostgreSQL: uses the `charset` as the `ENCODING`.
+- Only `mysql` and `pgsql` drivers are supported.
+- Requires the matching PDO extension (`pdo_mysql` / `pdo_pgsql`) and a database user with `CREATE DATABASE` privileges.
 
 ---
 
 ## Configuration
 
-After publishing, edit `config/base.php` to register your interface-to-implementation bindings:
+Publish the config file:
+
+```bash
+php artisan vendor:publish --tag=base-config
+```
+
+This creates `config/base.php`:
 
 ```php
 return [
+
+    // When true, App\Interfaces\{Name}RepositoryInterface is automatically
+    // bound to App\Repositories\{Name}Repository by naming convention.
+    'auto_bind' => true,
+
+    // Manual bindings for anything that doesn't follow the convention.
     'bindings' => [
-        \App\Interfaces\ProductRepositoryInterface::class => \App\Repositories\ProductRepository::class,
+        // \App\Interfaces\ProductRepositoryInterface::class
+        //     => \App\Repositories\EloquentProductRepository::class,
     ],
+
 ];
 ```
 
-The service provider loops over this array and binds each pair into the container automatically.
+**Auto-binding** (enabled by default) scans `app/Interfaces/` for files matching `*RepositoryInterface.php` and binds each to the matching `*Repository` in `app/Repositories/`. Disable it and use `bindings` for full control:
 
-## Troubleshooting
+```php
+'auto_bind' => false,
+'bindings' => [
+    \App\Interfaces\ProductRepositoryInterface::class
+        => \App\Repositories\ProductRepository::class,
+],
+```
 
-**`Deprecation Notice: Function curl_close() is deprecated ...` during `composer` commands.**
-These notices come from Composer itself running on PHP 8.5 — not from this package. They appear on every Composer command and are harmless. Update Composer with `composer self-update`, or use PHP 8.4, to silence them.
+You can also register bindings in your own `AppServiceProvider` if you prefer:
 
-**`Your requirements could not be resolved ... nette/schema requires php 8.1 - 8.4`.**
-A transitive dependency in your project was locked to a version that predates PHP 8.5 support. Update it: `composer update nette/schema --with-all-dependencies`, then install/require again.
+```php
+$this->app->bind(
+    \App\Interfaces\ProductRepositoryInterface::class,
+    \App\Repositories\ProductRepository::class,
+);
+```
 
 ---
 
-## Development
+## Publishing helpers and traits
 
-Clone the repository and install the dev dependencies:
+By default, `ApiResponse` and the traits are used directly from the package namespace (`MuhammedSalama\Base\...`) — no copying is needed and you receive fixes automatically when updating the package.
+
+If you want **editable local copies** under the `App\` namespace, publish them:
+
+```bash
+# ApiResponse helper → app/Helpers/ApiResponse.php
+php artisan vendor:publish --tag=base-helpers
+
+# ApiResponseTrait + ImageUploadTrait → app/Traits/
+php artisan vendor:publish --tag=base-traits
+
+# Config → config/base.php
+php artisan vendor:publish --tag=base-config
+```
+
+After publishing, switch your `use` statements to the `App\Helpers` / `App\Traits` namespaces. Published files will not receive automatic updates — treat them as your own code.
+
+---
+
+## Testing and static analysis
+
+Install dev dependencies:
 
 ```bash
 composer install
 ```
 
-Run the test suite (PHPUnit + Orchestra Testbench):
+Run the test suite (PHPUnit + Orchestra Testbench, SQLite in-memory):
 
 ```bash
 composer test
 ```
 
-Run static analysis (PHPStan / Larastan):
+Run static analysis (PHPStan level 5 + Larastan):
 
 ```bash
 composer analyse
 ```
 
-Both run automatically on every push and pull request via GitHub Actions (see `.github/workflows`).
+Both commands run on every push and pull request via GitHub Actions across PHP 8.2, 8.3, and 8.4.
+
+---
+
+## Troubleshooting
+
+**`Deprecation Notice: Function curl_close() is deprecated` during Composer commands.**
+These come from Composer running on PHP 8.5+, not from this package. Run `composer self-update` or use PHP 8.4 to suppress them.
+
+**`Your requirements could not be resolved … nette/schema requires php 8.1 - 8.4`.**
+A transitive dependency in your project is locked to a version that predates PHP 8.5. Update it: `composer update nette/schema --with-all-dependencies`.
+
+**Auto-binding does not seem to work.**
+Check that `app/Interfaces/` exists and the files match the pattern `{Name}RepositoryInterface.php`. Both the interface class and the implementation class must be loadable (verify with `php artisan tinker` → `class_exists()`). Make sure `auto_bind` is `true` in `config/base.php`.
+
+**`Class … not found` after running `make:repository`.**
+Run `composer dump-autoload` so the PSR-4 autoloader picks up the newly created files.
+
+---
+
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) for a full list of changes by version.
+
+---
+
+## Contributing
+
+Contributions are welcome. Please:
+
+1. Fork the repository and create a feature branch.
+2. Write tests for any change in behaviour.
+3. Ensure `composer test` and `composer analyse` both pass locally.
+4. Open a pull request against `main` with a clear description of the change.
+5. **CI must be green before merging.** The workflow runs `composer test` across PHP 8.1–8.4 and Laravel 10/11/12, plus PHPStan static analysis. Consider enabling [GitHub branch-protection rules](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/about-protected-branches) to require all status checks to pass before a PR can be merged.
+
+---
+
+## Security
+
+If you discover a security vulnerability, please open a confidential issue or contact the author directly. Do **not** disclose vulnerabilities publicly until they have been addressed.
 
 ---
 
@@ -566,5 +831,4 @@ This package is open-sourced software licensed under the [MIT license](LICENSE).
 
 ## Author
 
-**Muhammed Salama**
-GitHub: [@Muhammed2024Salama](https://github.com/Muhammed2024Salama)
+**Muhammed Salama** — [@Muhammed2024Salama](https://github.com/Muhammed2024Salama)

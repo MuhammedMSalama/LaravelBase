@@ -2,86 +2,61 @@
 
 namespace MuhammedSalama\Base\Interfaces;
 
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Model;
+
 interface RepositoryInterface
 {
     /**
-     * Get all records.
-     *
-     * @param array $columns
-     * @param array $relations
-     * @return \Illuminate\Database\Eloquent\Collection
+     * @param array<int, string> $columns
+     * @param array<int, string> $relations
+     * @return Collection<int, Model>
      */
-    public function all(array $columns = ['*'], array $relations = []);
+    public function all(array $columns = ['*'], array $relations = []): Collection;
 
     /**
-     * Get paginated records.
-     *
-     * @param int $perPage
-     * @param array $columns
-     * @param array $relations
-     * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
+     * @param array<int, string> $columns
+     * @param array<int, string> $relations
      */
-    public function paginate(int $perPage = 15, array $columns = ['*'], array $relations = []);
+    public function paginate(int $perPage = 15, array $columns = ['*'], array $relations = []): LengthAwarePaginator;
 
     /**
-     * Find a record by its primary key.
+     * Find by primary key (returns null when absent).
      *
-     * @param int|string $id
-     * @param array $columns
-     * @param array $relations
-     * @return \Illuminate\Database\Eloquent\Model|null
+     * @param array<int, string> $columns
+     * @param array<int, string> $relations
      */
-    public function find($id, array $columns = ['*'], array $relations = []);
+    public function find(int|string $id, array $columns = ['*'], array $relations = []): ?Model;
 
     /**
-     * Find a record by its primary key or throw an exception.
+     * Find by primary key or throw ModelNotFoundException.
      *
-     * @param int|string $id
-     * @param array $columns
-     * @param array $relations
-     * @return \Illuminate\Database\Eloquent\Model
+     * @param array<int, string> $columns
+     * @param array<int, string> $relations
+     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
      */
-    public function findOrFail($id, array $columns = ['*'], array $relations = []);
+    public function findOrFail(int|string $id, array $columns = ['*'], array $relations = []): Model;
 
     /**
-     * Find a record by a given column/value.
+     * Find the first record matching the given column/value pair.
      *
-     * @param string $column
-     * @param mixed $value
-     * @param array $columns
-     * @return \Illuminate\Database\Eloquent\Model|null
+     * @param array<int, string> $columns
      */
-    public function findBy(string $column, $value, array $columns = ['*']);
+    public function findBy(string $column, mixed $value, array $columns = ['*']): ?Model;
 
     /**
-     * Create a new record.
-     *
-     * @param array $data
-     * @return \Illuminate\Database\Eloquent\Model
+     * @param array<string, mixed> $data
      */
-    public function create(array $data);
+    public function create(array $data): Model;
 
     /**
-     * Update an existing record.
-     *
-     * @param int|string $id
-     * @param array $data
-     * @return \Illuminate\Database\Eloquent\Model
+     * @param array<string, mixed> $data
      */
-    public function update($id, array $data);
+    public function update(int|string $id, array $data): Model;
 
-    /**
-     * Delete a record.
-     *
-     * @param int|string $id
-     * @return bool
-     */
-    public function delete($id): bool;
+    public function delete(int|string $id): bool;
 
-    /**
-     * Get the query builder for advanced queries.
-     *
-     * @return \Illuminate\Database\Eloquent\Builder
-     */
-    public function query();
+    public function query(): Builder;
 }
