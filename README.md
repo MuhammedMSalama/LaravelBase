@@ -18,8 +18,8 @@
   <a href="LICENSE">
     <img src="https://img.shields.io/badge/license-MIT-green?style=flat-square" alt="License: MIT">
   </a>
-  <a href="https://github.com/Muhammed2024Salama/laravel-base/actions">
-    <img src="https://img.shields.io/github/actions/workflow/status/Muhammed2024Salama/laravel-base/ci.yml?branch=main&style=flat-square&label=CI" alt="CI">
+  <a href="https://github.com/Muhammed2024Salama/LaravelBase/actions">
+    <img src="https://img.shields.io/github/actions/workflow/status/Muhammed2024Salama/LaravelBase/ci.yml?branch=main&style=flat-square&label=CI" alt="CI">
   </a>
 </p>
 
@@ -84,7 +84,7 @@ Every Laravel API project ends up writing the same base classes: a `BaseReposito
 | **Scaffold generator** | `make:repository` creates Interface, Repository, Service, Form Requests, Controller, and migration in one command |
 | **Database creator** | `base:create-database` creates the configured MySQL or PostgreSQL database if it does not exist |
 | **Auto-binding** | Interfaces are automatically bound to their repositories by naming convention — no manual registration needed |
-| **Laravel 10/11/12, PHP 8.1+** | No upper-bound constraint on the Laravel version |
+| **Laravel 10/11/12/13, PHP 8.1+** | No upper-bound constraint on the Laravel version |
 
 ---
 
@@ -93,7 +93,7 @@ Every Laravel API project ends up writing the same base classes: a `BaseReposito
 | Dependency | Version |
 |---|---|
 | PHP | `^8.1` |
-| Laravel | `10.x` and above |
+| Laravel | `10.x` and above (10 / 11 / 12 / 13) |
 
 ---
 
@@ -116,7 +116,7 @@ Add the repository entry to your project's `composer.json`, then require the pac
 "repositories": [
     {
         "type": "vcs",
-        "url": "https://github.com/Muhammed2024Salama/laravel-base"
+        "url": "https://github.com/Muhammed2024Salama/LaravelBase"
     }
 ]
 ```
@@ -779,7 +779,7 @@ Run static analysis (PHPStan level 5 + Larastan):
 composer analyse
 ```
 
-Both commands run on every push and pull request via GitHub Actions across PHP 8.2, 8.3, and 8.4.
+Both commands run on every push and pull request via GitHub Actions across PHP 8.1–8.4 and Laravel 10/11/12/13.
 
 ---
 
@@ -813,7 +813,7 @@ Contributions are welcome. Please:
 2. Write tests for any change in behaviour.
 3. Ensure `composer test` and `composer analyse` both pass locally.
 4. Open a pull request against `main` with a clear description of the change.
-5. **CI must be green before merging.** The workflow runs `composer test` across PHP 8.1–8.4 and Laravel 10/11/12, plus PHPStan static analysis. Consider enabling [GitHub branch-protection rules](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/about-protected-branches) to require all status checks to pass before a PR can be merged.
+5. **CI must be green before merging.** The workflow runs `composer test` across PHP 8.1–8.4 and Laravel 10/11/12/13 (with appropriate PHP-version excludes), plus PHPStan static analysis. Consider enabling [GitHub branch-protection rules](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/about-protected-branches) to require all status checks to pass before a PR can be merged.
 
 ---
 
