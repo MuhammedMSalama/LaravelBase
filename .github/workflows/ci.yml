@@ -85,15 +85,8 @@ jobs:
             ${{ runner.os }}-php${{ matrix.php }}-laravel${{ matrix.laravel }}-
             ${{ runner.os }}-php${{ matrix.php }}-
 
-      # Laravel 10/11 packages carry Packagist security advisories.
-      # Composer 2.x blocks their installation by default.  We are testing
-      # THIS PACKAGE's compatibility with those framework versions — not
-      # deploying them in production.  This config is local to the runner
-      # and has zero effect on consumers of muhammedsalama/laravel-base.
-      - name: Allow legacy Laravel test targets that carry security advisories
-        run: |
-          composer config --no-interaction audit.abandoned ignore || true
-          composer config --no-interaction policy.advisories.block false
+      - name: Disable Composer advisory blocking
+        run: composer config --no-interaction policy.advisories.block false
 
       - name: Constrain to Laravel ${{ matrix.laravel }}
         run: |
@@ -183,15 +176,21 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-smoke-
 
-      # Applied defensively: prevents breakage if a transitive dependency ever
-      # resolves to an advisory-affected version.  No effect on package consumers.
-      - name: Allow packages with security advisories (defensive)
-        run: |
-          composer config --no-interaction audit.abandoned ignore || true
-          composer config --no-interaction policy.advisories.block false
+      - name: Disable Composer advisory blocking
+        run: composer config --no-interaction policy.advisories.block false
 
       - name: Install dependencies
         run: composer update --prefer-stable --prefer-dist --no-interaction --no-progress
+
+      # Register our service provider with the testbench CLI so it discovers
+      # the make:module command when running artisan outside of PHPUnit.
+      # This file is NOT committed; it exists only for the duration of this job.
+      - name: Write testbench.yaml for CLI runner
+        run: |
+          cat > testbench.yaml <<'EOF'
+          providers:
+            - MuhammedSalama\Base\BaseServiceProvider
+          EOF
 
       # --- Generation runs -------------------------------------------------
       # 1. Full module (all new stubs: module-model, module-service,
@@ -289,3 +288,9 @@ jobs:
             fail=1
           fi
           exit $fail
+
+      # Clean up testbench.yaml so it does not persist in the workspace
+      # (irrelevant to CI but good practice for act/local runners).
+      - name: Remove testbench.yaml
+        if: always()
+        run: rm -f testbench.yaml
