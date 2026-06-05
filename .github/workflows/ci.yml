@@ -197,25 +197,25 @@ jobs:
       #    module-controller, enum, filter, policy, resource, tests).
       #    Skip migration to avoid a timestamped filename in assertions.
       - name: "Generate: full module (SmokeTest)"
-        run: ./vendor/bin/testbench artisan make:module SmokeTest --no-migration --no-interaction
+        run: ./vendor/bin/testbench make:module SmokeTest --no-migration --no-interaction
 
       # 2. Migration only — exercises driver-aware migration.stub and the
       #    detectDatabaseDriver() path (will see SQLite → text() fallback).
       - name: "Generate: migration only (SmokeMig)"
-        run: ./vendor/bin/testbench artisan make:module SmokeMig --only=migration --no-interaction
+        run: ./vendor/bin/testbench make:module SmokeMig --only=migration --no-interaction
 
       # 3. Degraded stubs path — no enum/filter/policy/resource/test forces
       #    the generator to pick plain model.stub, service.stub, and
       #    controller.stub instead of the full-module variants.
       - name: "Generate: plain stubs path (SmokePlain)"
         run: |
-          ./vendor/bin/testbench artisan make:module SmokePlain \
+          ./vendor/bin/testbench make:module SmokePlain \
             --no-enum --no-filter --no-policy --no-resource --no-test --no-migration \
             --no-interaction
 
       # 4. Minimal subset — interface + repository + service only.
       - name: "Generate: minimal subset (SmokeMin)"
-        run: ./vendor/bin/testbench artisan make:module SmokeMin --only=interface,repository,service --no-interaction
+        run: ./vendor/bin/testbench make:module SmokeMin --only=interface,repository,service --no-interaction
 
       # --- Lint pass -------------------------------------------------------
       # php -l every file the generator placed in app/, tests/, and
