@@ -7,7 +7,7 @@ use Illuminate\Http\Resources\Json\ResourceCollection;
 
 class {{ class }}ResourceCollection extends ResourceCollection
 {
-    public string $collects = {{ class }}Resource::class;
+    public $collects = {{ class }}Resource::class;
 
     /**
      * @return array<string, mixed>

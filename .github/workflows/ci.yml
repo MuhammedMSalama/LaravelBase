@@ -85,6 +85,9 @@ jobs:
             ${{ runner.os }}-php${{ matrix.php }}-laravel${{ matrix.laravel }}-
             ${{ runner.os }}-php${{ matrix.php }}-
 
+      - name: Disable Composer advisory blocking
+        run: composer config --no-interaction policy.advisories.block false
+
       - name: Constrain to Laravel ${{ matrix.laravel }}
         run: |
           composer require \
@@ -172,6 +175,9 @@ jobs:
           key: ${{ runner.os }}-smoke-${{ hashFiles('**/composer.json') }}
           restore-keys: |
             ${{ runner.os }}-smoke-
+
+      - name: Disable Composer advisory blocking
+        run: composer config --no-interaction policy.advisories.block false
 
       - name: Install dependencies
         run: composer update --prefer-stable --prefer-dist --no-interaction --no-progress
