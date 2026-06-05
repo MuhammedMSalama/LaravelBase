@@ -1,0 +1,21 @@
+<?php
+
+namespace {{ rootNamespace }}Services;
+
+use {{ rootNamespace }}Filters\{{ class }}Filters;
+use {{ rootNamespace }}Interfaces\{{ class }}RepositoryInterface;
+use Illuminate\Http\Request;
+use MuhammedSalama\Base\Services\BaseService;
+
+class {{ class }}Service extends BaseService
+{
+    public function __construct({{ class }}RepositoryInterface $repository)
+    {
+        parent::__construct($repository);
+    }
+
+    public function filter(Request $request): {{ class }}Filters
+    {
+        return new {{ class }}Filters($request, $this->repository->query());
+    }
+}

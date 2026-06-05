@@ -1,0 +1,127 @@
+<?php
+
+namespace {{ rootNamespace }}Http\Controllers;
+
+use {{ modelNamespace }};
+use {{ rootNamespace }}Http\Requests\{{ class }}\Store{{ class }}Request;
+use {{ rootNamespace }}Http\Requests\{{ class }}\Update{{ class }}Request;
+use {{ rootNamespace }}Http\Resources\{{ class }}Resource;
+use {{ rootNamespace }}Services\{{ class }}Service;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use MuhammedSalama\Base\Helpers\ApiResponse;
+
+/**
+ * @OA\Tag(name="{{ class }}", description="{{ class }} management")
+ */
+class {{ controller }} extends Controller
+{
+    public function __construct(private {{ class }}Service $service)
+    {
+    }
+
+    /**
+     * @OA\Get(
+     *     path="/api/{{ routeName }}",
+     *     operationId="{{ class }}Index",
+     *     tags={"{{ class }}"},
+     *     summary="List all {{ class }}s with filtering and pagination",
+     *     @OA\Parameter(name="per_page", in="query", description="Results per page (1–100)", @OA\Schema(type="integer", default=15)),
+     *     @OA\Parameter(name="search",   in="query", description="Full-text search term",    @OA\Schema(type="string")),
+     *     @OA\Parameter(name="sort_by",  in="query", description="Column to sort by",        @OA\Schema(type="string")),
+     *     @OA\Parameter(name="sort_dir", in="query", description="Sort direction",           @OA\Schema(type="string", enum={"asc","desc"})),
+     *     @OA\Parameter(name="status",   in="query", description="Filter by status",         @OA\Schema(type="string")),
+     *     @OA\Response(response=200, description="Paginated list of {{ class }}s"),
+     *     @OA\Response(response=401, description="Unauthenticated"),
+     *     @OA\Response(response=403, description="Forbidden")
+     * )
+     */
+    public function index(Request $request): JsonResponse
+    {
+        $this->authorize('viewAny', {{ model }}::class);
+
+        return ApiResponse::paginated(
+            $this->service->filter($request)->paginate()
+        );
+    }
+
+    /**
+     * @OA\Get(
+     *     path="/api/{{ routeName }}/{id}",
+     *     operationId="{{ class }}Show",
+     *     tags={"{{ class }}"},
+     *     summary="Get a single {{ class }}",
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Response(response=200, description="Success"),
+     *     @OA\Response(response=404, description="Not found")
+     * )
+     */
+    public function show(int $id): JsonResponse
+    {
+        ${{ modelVariable }} = $this->service->find($id);
+        $this->authorize('view', ${{ modelVariable }});
+
+        return ApiResponse::success(new {{ class }}Resource(${{ modelVariable }}));
+    }
+
+    /**
+     * @OA\Post(
+     *     path="/api/{{ routeName }}",
+     *     operationId="{{ class }}Store",
+     *     tags={"{{ class }}"},
+     *     summary="Create a new {{ class }}",
+     *     @OA\Response(response=201, description="Created"),
+     *     @OA\Response(response=422, description="Validation error")
+     * )
+     */
+    public function store(Store{{ class }}Request $request): JsonResponse
+    {
+        $this->authorize('create', {{ model }}::class);
+
+        return ApiResponse::created(
+            new {{ class }}Resource($this->service->store($request->validated()))
+        );
+    }
+
+    /**
+     * @OA\Put(
+     *     path="/api/{{ routeName }}/{id}",
+     *     operationId="{{ class }}Update",
+     *     tags={"{{ class }}"},
+     *     summary="Update an existing {{ class }}",
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Response(response=200, description="Updated"),
+     *     @OA\Response(response=422, description="Validation error")
+     * )
+     */
+    public function update(Update{{ class }}Request $request, int $id): JsonResponse
+    {
+        ${{ modelVariable }} = $this->service->find($id);
+        $this->authorize('update', ${{ modelVariable }});
+
+        return ApiResponse::success(
+            new {{ class }}Resource($this->service->update($id, $request->validated()))
+        );
+    }
+
+    /**
+     * @OA\Delete(
+     *     path="/api/{{ routeName }}/{id}",
+     *     operationId="{{ class }}Destroy",
+     *     tags={"{{ class }}"},
+     *     summary="Delete a {{ class }}",
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Response(response=200, description="Deleted"),
+     *     @OA\Response(response=404, description="Not found")
+     * )
+     */
+    public function destroy(int $id): JsonResponse
+    {
+        ${{ modelVariable }} = $this->service->find($id);
+        $this->authorize('delete', ${{ modelVariable }});
+
+        $this->service->destroy($id);
+
+        return ApiResponse::success(null, '{{ class }} deleted successfully.');
+    }
+}

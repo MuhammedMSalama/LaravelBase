@@ -7,6 +7,107 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.0.0] - 2026-06-05
+
+### Version reasoning
+v3.0.0 because:
+- `make:module` is a new primary command that generates a materially larger set of
+  artifacts than `make:repository` ever did. Calling it "2.x" would misrepresent the
+  scope of the change.
+- `make:repository` now delegates to `make:module` internally. Its *output* is fully
+  backward-compatible (the same files are generated when the same `--no-*` flags are
+  used), but the command is now marked `@deprecated` and prints a deprecation notice
+  at runtime — a visible behavior change that merits a major bump.
+- The new components (Filter, Enum, Policy, Resource, Tests, Swagger annotations)
+  represent a fundamentally different capability surface.
+
+### Added
+- **`php artisan make:module {Name}`** — the new primary generator that scaffolds a
+  complete module in one command:
+  | Component | Generated path | Stub used |
+  |---|---|---|
+  | Interface | `app/Interfaces/{Name}RepositoryInterface.php` | `interface.stub` |
+  | Repository | `app/Repositories/{Name}Repository.php` | `repository.stub` |
+  | Model | `app/Models/{Name}.php` | `module-model.stub` / `model.stub` |
+  | Migration | `database/migrations/{ts}_create_{table}_table.php` | `migration.stub` |
+  | Status Enum | `app/Enums/{Name}Status.php` | `enum.stub` |
+  | Filters class | `app/Filters/{Name}Filters.php` | `filter.stub` |
+  | Service | `app/Services/{Name}Service.php` | `module-service.stub` / `service.stub` |
+  | StoreRequest | `app/Http/Requests/{Name}/Store{Name}Request.php` | `request.stub` |
+  | UpdateRequest | `app/Http/Requests/{Name}/Update{Name}Request.php` | `request.stub` |
+  | API Resource | `app/Http/Resources/{Name}Resource.php` | `resource.stub` |
+  | ResourceCollection | `app/Http/Resources/{Name}ResourceCollection.php` | `resource-collection.stub` |
+  | Policy | `app/Policies/{Name}Policy.php` | `policy.stub` |
+  | Controller | `app/Http/Controllers/{Name}Controller.php` | `module-controller.stub` / `controller.stub` / `controller.plain.stub` |
+  | Feature test | `tests/Feature/{Name}Test.php` | `test-feature.stub` |
+  | Unit test | `tests/Unit/{Name}ServiceTest.php` | `test-unit.stub` |
+- **`--only=<list>`** and **`--except=<list>`** options: comma-separated component
+  names to include or exclude (e.g. `--only=model,migration` or
+  `--except=test,enum`).
+- **`--no-enum`**, **`--no-filter`**, **`--no-resource`**, **`--no-policy`**,
+  **`--no-test`** options for per-component opt-out (complement the existing
+  `--no-model`, `--no-service`, `--no-controller`, `--no-request`, `--no-migration`).
+- **`MuhammedSalama\Base\Filters\AbstractFilter`** — base class for request-driven
+  query filtering with built-in pagination:
+  - Declare `$filters` (column → operator whitelist), `$sortable`, `$searchable` in
+    each subclass.
+  - Supports `=`, `like`, `>`, `<`, `>=`, `<=`, `!=` operators.
+  - `?search=` applies LIKE across all `$searchable` columns.
+  - `?sort_by=` + `?sort_dir=asc|desc` for safe, whitelisted ordering.
+  - `?per_page=` clamped to `[1, 100]`; `paginate(int $default = 15)` returns a
+    `LengthAwarePaginator` compatible with `ApiResponse::paginated()`.
+  - `apply()` is idempotent; `getQuery()` returns the filtered `Builder` for custom
+    post-processing.
+- **Driver-aware migration generation**: reads `config('database.default')` and the
+  configured driver at runtime.
+  - MySQL / PostgreSQL: `$table->json('metadata')->nullable()`.
+  - SQLite / other: `$table->text('metadata')->nullable()` with a printed notice.
+  - The `status` column uses `string` type everywhere (portable; no driver-specific
+    enum constraints).
+- **Swagger / OpenAPI doc-block annotations** in the generated controller
+  (`@OA\Get`, `@OA\Post`, `@OA\Put`, `@OA\Delete`, `@OA\Tag`, `@OA\Parameter`,
+  `@OA\Response`) compatible with `darkaonline/l5-swagger` + `zircote/swagger-php`.
+  The package is suggested (not required); see README for setup.
+- **Policy** stub with `HandlesAuthorization`, all standard CRUD gates, and
+  instructions for registration in `AuthServiceProvider` / via `Gate::policy()`.
+  The full-module controller wires `$this->authorize()` calls for every action.
+- **Status Enum** (`{Name}Status: string`) with `Active`, `Inactive`, `Pending`
+  cases; `label()`, `isActive()`, and `values()` helpers. The generated model casts
+  the `status` column to the enum automatically.
+- **API Resource** + **ResourceCollection** with `@OA\Schema` annotation and a
+  `toArray()` implementation ready to customise.
+- **Feature and Unit test stubs** that pass (skipped) out-of-the-box so the
+  consumer's CI stays green from first commit; each has inline TODO instructions.
+- New `module-model.stub`, `module-service.stub`, `module-controller.stub` for the
+  full module experience; existing stubs are unchanged for backward compatibility.
+- 17 new package tests covering: full module generation, `--only`/`--except`,
+  individual `--no-*` flags, idempotency, `--force`, backward-compat alias,
+  enum content, provider binding.
+- 19 new `AbstractFilterTest` assertions covering exact filters, LIKE filters,
+  unknown-column injection protection, full-text search, sorting, pagination
+  clamping, idempotency, and combined filter+search.
+- `composer.json` `suggest` block for `darkaonline/l5-swagger` and
+  `zircote/swagger-php`; updated `keywords` and `description`.
+
+### Changed
+- **`make:repository`** is now a thin `@deprecated` alias that delegates to
+  `make:module` with `--no-resource --no-policy --no-test --no-enum --no-filter`.
+  All existing options (`--model`, `--controller`, `--no-*`, `--provider`, `--force`)
+  are forwarded transparently. **Output is identical to v2.2.0** — no files are
+  added or removed compared to previous runs. A deprecation notice is printed at
+  runtime pointing to `make:module`.
+
+### Migration guide from v2.x
+1. No code changes required — `make:repository` still works and generates the same
+   files as before.
+2. Switch scripts to `php artisan make:module` at your convenience; the output is a
+   superset of what `make:repository` produced.
+3. If you have a custom class implementing `RepositoryInterface` directly (without
+   extending `BaseRepository`), no interface changes were made in this release —
+   `query(): Builder` was already present since v2.0.0.
+
+---
+
 ## [2.2.0] - 2026-06-02
 
 ### Added

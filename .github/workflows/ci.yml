@@ -16,7 +16,7 @@ concurrency:
 jobs:
 
   # ---------------------------------------------------------------------------
-  # Test matrix: PHP 8.1–8.4 × Laravel 10/11/12 + one prefer-lowest run
+  # Test matrix: PHP 8.1–8.4 × Laravel 10/11/12/13 + one prefer-lowest run
   # ---------------------------------------------------------------------------
   tests:
     name: "PHP ${{ matrix.php }} / Laravel ${{ matrix.laravel }} (${{ matrix.dependency-version }})"
@@ -67,7 +67,8 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
-          extensions: dom, curl, libxml, mbstring, pdo, sqlite, pdo_sqlite
+          # fileinfo is required by ImageUploadTrait (MIME-based extension detection via finfo).
+          extensions: dom, curl, libxml, mbstring, pdo, sqlite, pdo_sqlite, fileinfo
           coverage: none
 
       - name: Get Composer cache directory
@@ -116,7 +117,9 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.3'
-          extensions: dom, curl, libxml, mbstring, pdo, sqlite, pdo_sqlite
+          # Match the extensions used in the tests job so analysis sees the
+          # same extension surface; fileinfo needed for ImageUploadTrait.
+          extensions: dom, curl, libxml, mbstring, pdo, sqlite, pdo_sqlite, fileinfo
           coverage: none
 
       - name: Get Composer cache directory
@@ -136,3 +139,152 @@ jobs:
 
       - name: Run static analysis
         run: composer analyse
+
+  # ---------------------------------------------------------------------------
+  # make:module smoke test — runs the generator against a real Testbench
+  # skeleton and php -l checks every generated file for syntax errors.
+  # Runs in parallel with the matrix (independent failure domain).
+  # ---------------------------------------------------------------------------
+  make-module-smoke:
+    name: "Smoke: make:module generates valid PHP"
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up PHP 8.3
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: dom, curl, libxml, mbstring, pdo, sqlite, pdo_sqlite, fileinfo
+          coverage: none
+
+      - name: Get Composer cache directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+
+      - name: Cache Composer packages
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-smoke-${{ hashFiles('**/composer.json') }}
+          restore-keys: |
+            ${{ runner.os }}-smoke-
+
+      - name: Install dependencies
+        run: composer update --prefer-stable --prefer-dist --no-interaction --no-progress
+
+      # Register our service provider with the testbench CLI so it discovers
+      # the make:module command when running artisan outside of PHPUnit.
+      # This file is NOT committed; it exists only for the duration of this job.
+      - name: Write testbench.yaml for CLI runner
+        run: |
+          cat > testbench.yaml <<'EOF'
+          providers:
+            - MuhammedSalama\Base\BaseServiceProvider
+          EOF
+
+      # --- Generation runs -------------------------------------------------
+      # 1. Full module (all new stubs: module-model, module-service,
+      #    module-controller, enum, filter, policy, resource, tests).
+      #    Skip migration to avoid a timestamped filename in assertions.
+      - name: "Generate: full module (SmokeTest)"
+        run: ./vendor/bin/testbench artisan make:module SmokeTest --no-migration --no-interaction
+
+      # 2. Migration only — exercises driver-aware migration.stub and the
+      #    detectDatabaseDriver() path (will see SQLite → text() fallback).
+      - name: "Generate: migration only (SmokeMig)"
+        run: ./vendor/bin/testbench artisan make:module SmokeMig --only=migration --no-interaction
+
+      # 3. Degraded stubs path — no enum/filter/policy/resource/test forces
+      #    the generator to pick plain model.stub, service.stub, and
+      #    controller.stub instead of the full-module variants.
+      - name: "Generate: plain stubs path (SmokePlain)"
+        run: |
+          ./vendor/bin/testbench artisan make:module SmokePlain \
+            --no-enum --no-filter --no-policy --no-resource --no-test --no-migration \
+            --no-interaction
+
+      # 4. Minimal subset — interface + repository + service only.
+      - name: "Generate: minimal subset (SmokeMin)"
+        run: ./vendor/bin/testbench artisan make:module SmokeMin --only=interface,repository,service --no-interaction
+
+      # --- Lint pass -------------------------------------------------------
+      # php -l every file the generator placed in app/, tests/, and
+      # database/migrations/.  One bad syntax line fails the job immediately.
+      - name: Lint all generated PHP files
+        run: |
+          SKEL=vendor/orchestra/testbench-core/laravel
+          # Collect generated files from all three destination trees
+          mapfile -t php_files < <(
+            find \
+              "$SKEL/app" \
+              "$SKEL/tests/Feature" \
+              "$SKEL/tests/Unit" \
+              "$SKEL/database/migrations" \
+              -name '*.php' 2>/dev/null \
+            | grep -v 'CreatesApplication.php' \
+            | grep -v 'testbench_create_'
+          )
+          if [ "${#php_files[@]}" -eq 0 ]; then
+            echo "ERROR: no PHP files found — generator may have failed silently."
+            exit 1
+          fi
+          echo "Linting ${#php_files[@]} generated file(s)..."
+          for f in "${php_files[@]}"; do
+            echo "  php -l $f"
+            php -l "$f"
+          done
+
+      # --- Existence assertions --------------------------------------------
+      - name: Verify expected files from full module (SmokeTest)
+        run: |
+          SKEL=vendor/orchestra/testbench-core/laravel
+          fail=0
+          check() {
+            if [ -f "$1" ]; then
+              echo "  OK   $1"
+            else
+              echo "  FAIL $1  (missing)"
+              fail=1
+            fi
+          }
+          # Full module — all 14 non-migration components
+          check "$SKEL/app/Models/SmokeTest.php"
+          check "$SKEL/app/Enums/SmokeTestStatus.php"
+          check "$SKEL/app/Filters/SmokeTestFilters.php"
+          check "$SKEL/app/Interfaces/SmokeTestRepositoryInterface.php"
+          check "$SKEL/app/Repositories/SmokeTestRepository.php"
+          check "$SKEL/app/Services/SmokeTestService.php"
+          check "$SKEL/app/Http/Requests/SmokeTest/StoreSmokeTestRequest.php"
+          check "$SKEL/app/Http/Requests/SmokeTest/UpdateSmokeTestRequest.php"
+          check "$SKEL/app/Http/Resources/SmokeTestResource.php"
+          check "$SKEL/app/Http/Resources/SmokeTestResourceCollection.php"
+          check "$SKEL/app/Policies/SmokeTestPolicy.php"
+          check "$SKEL/app/Http/Controllers/SmokeTestController.php"
+          check "$SKEL/tests/Feature/SmokeTestTest.php"
+          check "$SKEL/tests/Unit/SmokeTestServiceTest.php"
+          # Plain stubs path — model + controller (plain variants) still generated
+          check "$SKEL/app/Models/SmokePlain.php"
+          check "$SKEL/app/Http/Controllers/SmokePlainController.php"
+          # Minimal subset
+          check "$SKEL/app/Interfaces/SmokeMinRepositoryInterface.php"
+          check "$SKEL/app/Repositories/SmokeMinRepository.php"
+          check "$SKEL/app/Services/SmokeMinService.php"
+          # Driver-aware migration (timestamped — match by glob)
+          mig_count=$(find "$SKEL/database/migrations" -name '*smoke_migs*' 2>/dev/null | wc -l)
+          if [ "$mig_count" -gt 0 ]; then
+            echo "  OK   smoke_migs migration ($mig_count file)"
+          else
+            echo "  FAIL smoke_migs migration (not found in database/migrations)"
+            fail=1
+          fi
+          exit $fail
+
+      # Clean up testbench.yaml so it does not persist in the workspace
+      # (irrelevant to CI but good practice for act/local runners).
+      - name: Remove testbench.yaml
+        if: always()
+        run: rm -f testbench.yaml

@@ -1,0 +1,69 @@
+<?php
+
+namespace Tests\Feature;
+
+use Tests\TestCase;
+
+/**
+ * Generated feature tests for the {{ class }} module.
+ *
+ * Before enabling these tests:
+ *   1. Register the route in routes/api.php:
+ *      Route::apiResource('{{ routeName }}', \{{ rootNamespace }}Http\Controllers\{{ controller }}::class);
+ *   2. Create a database factory:
+ *      php artisan make:factory {{ model }}Factory --model={{ model }}
+ *   3. Remove the markTestSkipped() calls below.
+ */
+class {{ class }}Test extends TestCase
+{
+    public function test_index_returns_paginated_list(): void
+    {
+        $this->markTestSkipped('Register route and remove skip to enable.');
+
+        $response = $this->getJson('/api/{{ routeName }}');
+
+        $response->assertOk()
+                 ->assertJsonStructure(['status', 'message', 'data', 'meta']);
+    }
+
+    public function test_store_creates_a_record(): void
+    {
+        $this->markTestSkipped('Implement with validated payload.');
+
+        $response = $this->postJson('/api/{{ routeName }}', [
+            'name'   => 'Test {{ class }}',
+            'status' => 'active',
+        ]);
+
+        $response->assertCreated()
+                 ->assertJsonPath('status', true);
+    }
+
+    public function test_show_returns_single_resource(): void
+    {
+        $this->markTestSkipped('Requires a factory. Replace with: ${{ modelVariable }} = {{ model }}::factory()->create();');
+
+        $response = $this->getJson('/api/{{ routeName }}/1');
+
+        $response->assertOk();
+    }
+
+    public function test_update_persists_changes(): void
+    {
+        $this->markTestSkipped('Implement after creating a factory.');
+
+        $response = $this->putJson('/api/{{ routeName }}/1', ['name' => 'Updated']);
+
+        $response->assertOk();
+    }
+
+    public function test_destroy_removes_the_record(): void
+    {
+        $this->markTestSkipped('Implement after creating a factory.');
+
+        $response = $this->deleteJson('/api/{{ routeName }}/1');
+
+        $response->assertOk()
+                 ->assertJsonPath('status', true);
+    }
+}

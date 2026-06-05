@@ -1,8 +1,10 @@
 <h1 align="center">Laravel Base</h1>
 
 <p align="center">
-  <strong>Repository–Service scaffolding, consistent API responses, and image handling for Laravel 10+.</strong><br>
-  Stop rewriting boilerplate — extend a small set of tested base classes and focus on business logic.
+  <strong>Professional module generator and Repository–Service scaffolding for Laravel APIs.</strong><br>
+  One command scaffolds a complete module — Model, Migration, Enum, Filter+Pagination,<br>
+  Interface, Repository, Service, Requests, Resource, Policy, Controller (with Swagger/OA),<br>
+  and Feature + Unit tests. Stop rewriting boilerplate and focus on business logic.
 </p>
 
 <p align="center">
@@ -33,14 +35,22 @@
 - [Installation](#installation)
 - [Quick Start](#quick-start)
 - [Architecture overview](#architecture-overview)
-- [Usage](#usage)
-  - [1. Generator command](#1-generator-command-make-repository)
-  - [2. Manual setup](#2-manual-setup)
-    - [Interface](#interface)
-    - [Repository](#repository)
-    - [Service](#service)
-    - [Form Requests](#form-requests)
-    - [Controller](#controller)
+- [make:module — the module generator](#makemodule--the-module-generator)
+  - [Component table](#component-table)
+  - [--only and --except](#--only-and---except)
+  - [Per-component --no-* flags](#per-component---no--flags)
+  - [Other options](#other-options)
+- [Filter + Pagination API](#filter--pagination-api)
+- [Driver-aware migrations](#driver-aware-migrations)
+- [Swagger / OpenAPI docs](#swagger--openapi-docs)
+- [Enums](#enums)
+- [Policy](#policy)
+- [API Resource](#api-resource)
+- [Generated tests](#generated-tests)
+- [Repository auto-binding](#repository-auto-binding)
+- [make:repository — deprecated alias](#makerepository--deprecated-alias)
+- [base:create-database](#basecreate-database)
+- [Manual setup](#manual-setup)
 - [API Reference](#api-reference)
   - [RepositoryInterface](#repositoryinterface)
   - [BaseRepository](#baserepository)
@@ -50,9 +60,6 @@
   - [ApiResponse](#apiresponse)
   - [ApiResponseTrait](#apiresponsetrait)
   - [ImageUploadTrait](#imageuploadtrait)
-- [Commands](#commands)
-  - [make:repository](#makerepository)
-  - [base:create-database](#basecreate-database)
 - [Configuration](#configuration)
 - [Publishing helpers and traits](#publishing-helpers-and-traits)
 - [Testing and static analysis](#testing-and-static-analysis)
@@ -67,7 +74,7 @@
 
 ## Why use this?
 
-Every Laravel API project ends up writing the same base classes: a `BaseRepository` with CRUD methods, a `BaseService` that wraps it, a `FormRequest` that returns JSON errors instead of redirecting, and a handful of response-shape helpers. This package ships all of that once, tested and type-safe, so you extend rather than copy-paste.
+Every Laravel API project ends up writing the same base classes: a `BaseRepository` with CRUD methods, a `BaseService` that wraps it, a `FormRequest` that returns JSON errors instead of redirecting, and a handful of response-shape helpers. v3 takes this further — `make:module` scaffolds the **entire vertical slice** of a module (data layer, business logic, HTTP layer, authorization, docs, and tests) in a single command, with real, idiomatic code you can ship immediately.
 
 ---
 
@@ -75,16 +82,22 @@ Every Laravel API project ends up writing the same base classes: a `BaseReposito
 
 | Feature | Details |
 |---|---|
-| **Repository pattern** | `BaseRepository` with `all`, `paginate`, `find`, `findOrFail`, `findBy`, `create`, `update`, `delete`, and `query` |
-| **Service layer** | `BaseService` that wraps any repository and keeps controllers thin |
-| **Contracts-first design** | `RepositoryInterface` and `ServiceInterface` with full native type hints |
-| **External validation** | `BaseRequest` (Form Request) moves validation out of controllers and returns a standard `422` JSON envelope on failure |
-| **Consistent API responses** | Static `ApiResponse` helper and an `ApiResponseTrait` for controllers — identical JSON shape |
-| **Image handling** | Upload, multi-upload, update (auto-deletes the old file), and delete via `ImageUploadTrait` |
-| **Scaffold generator** | `make:repository` creates Interface, Repository, Service, Form Requests, Controller, and migration in one command |
-| **Database creator** | `base:create-database` creates the configured MySQL or PostgreSQL database if it does not exist |
-| **Auto-binding** | Interfaces are automatically bound to their repositories by naming convention — no manual registration needed |
-| **Laravel 10/11/12/13, PHP 8.1+** | No upper-bound constraint on the Laravel version |
+| **Module generator** | `make:module` scaffolds 15 components in one command: Model, Migration, Enum, Filter, Interface, Repository, Service, Store/Update Requests, API Resource + Collection, Policy, Controller, Feature test, Unit test |
+| **Filter + Pagination** | `AbstractFilter` base class: whitelist-safe column filters, LIKE search, sort-by whitelist, per-page clamping — ergonomic `$service->filter($request)->paginate()` API |
+| **Driver-aware migrations** | Detects MySQL / PostgreSQL / SQLite at runtime; uses `json()` on MySQL/PG, `text()` fallback otherwise |
+| **Swagger / OpenAPI** | Generated controllers carry `@OA\*` PHPDoc annotations (l5-swagger / swagger-php compatible) — optional, gated behind `suggest` |
+| **Status Enums** | PHP 8.1 backed string enum (`Active`, `Inactive`, `Pending`) with `label()`, `isActive()`, `values()`; model casts `status` automatically |
+| **Policy** | Full CRUD policy stub with `HandlesAuthorization`; controller calls `$this->authorize()` for every action |
+| **API Resource** | `JsonResource` + `ResourceCollection` with `@OA\Schema`; controller returns wrapped resources via `ApiResponse` |
+| **Generated tests** | Feature + Unit test stubs that pass (skipped) from the first commit; inline TODO instructions |
+| **Repository pattern** | `BaseRepository` with `all`, `paginate`, `find`, `findOrFail`, `findBy`, `create`, `update`, `delete`, `query` |
+| **Service layer** | `BaseService` wrapping any repository; extend to add domain logic |
+| **Contracts-first design** | `RepositoryInterface` / `ServiceInterface` with full native type hints |
+| **External validation** | `BaseRequest` returns a standard 422 JSON envelope on failure — no extra code |
+| **Consistent API responses** | Static `ApiResponse` helper + `ApiResponseTrait` — identical JSON shape everywhere |
+| **Image handling** | Secure upload / update / delete via `ImageUploadTrait` (MIME-derived extension) |
+| **Auto-binding** | `*RepositoryInterface` auto-bound to `*Repository` by naming convention — no manual registration |
+| **Laravel 10/11/12/13, PHP 8.1+** | No upper-bound constraint on Laravel version |
 
 ---
 
@@ -99,18 +112,14 @@ Every Laravel API project ends up writing the same base classes: a `BaseReposito
 
 ## Installation
 
-### Via Packagist (recommended)
-
 ```bash
 composer require muhammedsalama/laravel-base
 ```
 
-The service provider is registered automatically through Laravel's package auto-discovery. No manual configuration is needed to get started.
+The service provider registers automatically via Laravel's package auto-discovery. No manual configuration required.
 
 <details>
-<summary>Install directly from GitHub (VCS repository)</summary>
-
-Add the repository entry to your project's `composer.json`, then require the package:
+<summary>Install from GitHub (VCS repository)</summary>
 
 ```json
 "repositories": [
@@ -122,7 +131,7 @@ Add the repository entry to your project's `composer.json`, then require the pac
 ```
 
 ```bash
-composer require muhammedsalama/laravel-base:^1.0
+composer require muhammedsalama/laravel-base:^3.0
 ```
 
 </details>
@@ -142,38 +151,49 @@ composer require muhammedsalama/laravel-base:^1.0
 }
 ```
 
-```bash
-composer require muhammedsalama/laravel-base
-```
-
 </details>
 
 ---
 
 ## Quick Start
 
-Scaffold a fully-wired `Product` resource in one command:
+Generate a complete `Product` module with one command:
 
 ```bash
-php artisan make:repository Product
+php artisan make:module Product
 ```
 
-That's it. The command creates:
+This creates 15 files — the full vertical slice of a REST API module:
 
 ```
 app/
+  Enums/ProductStatus.php
+  Filters/ProductFilters.php
   Interfaces/ProductRepositoryInterface.php
   Repositories/ProductRepository.php
   Services/ProductService.php
+  Models/Product.php
+  Policies/ProductPolicy.php
   Http/
+    Controllers/ProductController.php
     Requests/Product/
       StoreProductRequest.php
       UpdateProductRequest.php
-    Controllers/ProductController.php
+    Resources/
+      ProductResource.php
+      ProductResourceCollection.php
 database/migrations/xxxx_xx_xx_create_products_table.php
+tests/
+  Feature/ProductTest.php
+  Unit/ProductServiceTest.php
 ```
 
-Register the resource routes, add your `$fillable` to the `Product` model, and you have a working CRUD API with consistent JSON responses and request validation — no other steps required (auto-binding wires the interface to the repository automatically).
+Register the route, define your `$fillable`, register the policy, and you have a working, documented, authorized CRUD API:
+
+```php
+// routes/api.php
+Route::apiResource('products', ProductController::class);
+```
 
 ---
 
@@ -183,47 +203,446 @@ Register the resource routes, add your `$fillable` to the `Product` model, and y
 HTTP Request
     │
     ▼
-Controller          (thin — delegates everything)
-    │  uses ApiResponseTrait
-    │  type-hints Form Request
+Controller              (thin — delegates, authorizes, transforms)
+    │  uses ApiResponse::
+    │  type-hints Form Requests (Store/Update)
+    │  calls $this->authorize() via Policy
+    │  returns ApiResource-wrapped data
     ▼
-Service             (business logic lives here)
+Filters class           (AbstractFilter — request-driven, whitelisted)
+    │  applies WHERE / LIKE / ORDER BY to the query
+    │  paginates and returns LengthAwarePaginator
+    ▼
+Service                 (domain logic)
     │  extends BaseService
+    │  exposes filter(Request): {Name}Filters
     │  depends on RepositoryInterface
     ▼
-Repository          (data access)
+Repository              (data access)
     │  extends BaseRepository
     │  wraps an Eloquent Model
+    ▼
+Model                   (casts status → {Name}Status enum)
+    │
     ▼
 Database
 ```
 
-Validation failures are caught by `BaseRequest::failedValidation()` before the controller is ever called, and the response is returned in the standard JSON envelope automatically.
+Validation failures are caught by `BaseRequest::failedValidation()` before the controller runs, and a 422 `ApiResponse` envelope is returned automatically.
 
 ---
 
-## Usage
-
-### 1. Generator command: `make:repository`
-
-See the full [Commands → make:repository](#makerepository) reference below. A quick example:
+## make:module — the module generator
 
 ```bash
-# Full set: interface, repository, service, requests, controller, migration
-php artisan make:repository Product
-
-# Wrap a differently-named model
-php artisan make:repository Post --model=Article
-
-# Custom controller name; skip migration
-php artisan make:repository Invoice --controller=InvoiceApiController --no-migration
+php artisan make:module {Name} [options]
 ```
 
-### 2. Manual setup
+Generates a complete module. All files are valid, idiomatic, and immediately working.
 
-The following shows how to wire a `Product` resource by hand.
+### Component table
 
-#### Interface
+| Component | Generated path | Stub |
+|---|---|---|
+| Interface | `app/Interfaces/{Name}RepositoryInterface.php` | `interface.stub` |
+| Repository | `app/Repositories/{Name}Repository.php` | `repository.stub` |
+| Model | `app/Models/{Name}.php` | `module-model.stub` / `model.stub` |
+| Migration | `database/migrations/{ts}_create_{table}_table.php` | `migration.stub` |
+| Status Enum | `app/Enums/{Name}Status.php` | `enum.stub` |
+| Filters | `app/Filters/{Name}Filters.php` | `filter.stub` |
+| Service | `app/Services/{Name}Service.php` | `module-service.stub` / `service.stub` |
+| StoreRequest | `app/Http/Requests/{Name}/Store{Name}Request.php` | `request.stub` |
+| UpdateRequest | `app/Http/Requests/{Name}/Update{Name}Request.php` | `request.stub` |
+| API Resource | `app/Http/Resources/{Name}Resource.php` | `resource.stub` |
+| ResourceCollection | `app/Http/Resources/{Name}ResourceCollection.php` | `resource-collection.stub` |
+| Policy | `app/Policies/{Name}Policy.php` | `policy.stub` |
+| Controller | `app/Http/Controllers/{Name}Controller.php` | `module-controller.stub` |
+| Feature test | `tests/Feature/{Name}Test.php` | `test-feature.stub` |
+| Unit test | `tests/Unit/{Name}ServiceTest.php` | `test-unit.stub` |
+
+The `module-model.stub` (includes enum cast) is used when `enum` is enabled (the default). The `module-service.stub` (includes `filter()` method) is used when `filter` is enabled. The `module-controller.stub` (full: Resources + Policy + Swagger) is used when `resource`, `request`, `filter`, and `policy` are all enabled. Otherwise the simpler `controller.stub` / `controller.plain.stub` are selected automatically.
+
+### --only and --except
+
+Generate a **subset** of components using `--only` (whitelist) or `--except` (blacklist). Both accept comma-separated component names from the table above.
+
+```bash
+# Only the data-access layer
+php artisan make:module Invoice --only=model,migration,interface,repository,service
+
+# Everything except tests
+php artisan make:module Invoice --except=test
+
+# Just the model and migration — quick prototyping
+php artisan make:module Order --only=model,migration
+
+# Skip policy and tests — lean module
+php artisan make:module Category --except=policy,test
+```
+
+`--only` takes priority over `--except`. When both are omitted, all components are generated.
+
+### Per-component --no-* flags
+
+| Flag | Skips | Side effect |
+|---|---|---|
+| `--no-model` | Model | Model is **never** overwritten even with `--force` |
+| `--no-migration` | Migration | |
+| `--no-enum` | Status Enum | Uses plain `model.stub` (no cast) |
+| `--no-filter` | Filters class | Uses plain `service.stub` (no `filter()` method) and `controller.stub` |
+| `--no-service` | Service | |
+| `--no-request` | Store + Update Requests | Uses `controller.plain.stub` |
+| `--no-resource` | API Resource + Collection | Falls back to `controller.stub` |
+| `--no-policy` | Policy | Falls back to `controller.stub` |
+| `--no-controller` | Controller | |
+| `--no-test` | Feature + Unit test stubs | |
+
+### Other options
+
+| Option | Description |
+|---|---|
+| `--model=Foo` | Use `Foo` as the Eloquent model name (default: same as module name) |
+| `--controller=FooController` | Custom controller class name |
+| `--provider` | Create / update `RepositoryServiceProvider` with a binding for the interface |
+| `--force` | Overwrite existing files (model is **never** overwritten regardless) |
+
+---
+
+## Filter + Pagination API
+
+Every generated module ships with a `{Name}Filters` class extending
+`MuhammedSalama\Base\Filters\AbstractFilter`, and the generated `{Name}Service` exposes a
+`filter(Request $request)` method pre-wired to the repository's query builder.
+
+### Usage in the controller
+
+```php
+// {Name}Controller::index() — generated automatically
+public function index(Request $request): JsonResponse
+{
+    $this->authorize('viewAny', Product::class);
+
+    return ApiResponse::paginated(
+        $this->service->filter($request)->paginate()
+    );
+}
+```
+
+### Declaring filterable fields
+
+Extend `AbstractFilter` and declare your whitelist:
+
+```php
+// app/Filters/ProductFilters.php
+class ProductFilters extends AbstractFilter
+{
+    // column => SQL operator ('=', 'like', '>', '<', '>=', '<=', '!=')
+    protected array $filters = [
+        'status'   => '=',     // ?status=active
+        'category' => '=',
+        'name'     => 'like',  // ?name=phone → WHERE name LIKE '%phone%'
+    ];
+
+    // columns the client may ORDER BY
+    protected array $sortable = ['id', 'name', 'price', 'created_at'];
+
+    // columns searched by a single ?search=term
+    protected array $searchable = ['name', 'description'];
+}
+```
+
+### Supported request parameters
+
+| Parameter | Behaviour |
+|---|---|
+| `?status=active` | Exact match — operator must be `'='` in `$filters` |
+| `?name=phone` | LIKE match — operator must be `'like'` in `$filters` |
+| `?search=keyword` | OR LIKE across all `$searchable` columns |
+| `?sort_by=name` | ORDER BY — column must be in `$sortable` |
+| `?sort_dir=desc` | Sort direction; anything other than `desc` defaults to `asc` |
+| `?per_page=25` | Page size; clamped to `[1, 100]`; default 15 |
+
+**Security:** only columns declared in `$filters` or `$sortable` are ever applied to the query. Unknown request parameters are silently ignored — the filter is safe against column-injection attacks.
+
+### AbstractFilter API
+
+```php
+// Apply filters and return the Builder for further custom constraints
+$builder = $filter->apply()->getQuery();
+
+// Apply filters and paginate (returns LengthAwarePaginator)
+$paginator = $filter->paginate($perPage = 15);
+
+// Standard one-liner
+return ApiResponse::paginated($this->service->filter($request)->paginate());
+```
+
+`apply()` is idempotent — safe to call multiple times without duplicating WHERE clauses.
+
+---
+
+## Driver-aware migrations
+
+`make:module` reads `config('database.default')` and the configured driver at runtime — it never hardcodes a driver. The `metadata` JSON column in the generated migration is emitted as:
+
+| Driver | Generated column |
+|---|---|
+| `mysql` | `$table->json('metadata')->nullable()` |
+| `pgsql` | `$table->json('metadata')->nullable()` |
+| `sqlite` / other | `$table->text('metadata')->nullable()` + a printed notice |
+
+The `status` column always uses `$table->string('status')` — portable across all drivers. If your project uses SQLite or another driver, a notice is printed at generation time so you can review the migration before running it.
+
+---
+
+## Swagger / OpenAPI docs
+
+The generated controller carries `@OA\...` PHPDoc annotations compatible with
+**[darkaonline/l5-swagger](https://github.com/DarkaOnLine/L5-Swagger)** +
+**[zircote/swagger-php](https://github.com/zircote/swagger-php)**. These packages are listed
+in `composer.json` under `suggest` only — they are **not required**. Your application works
+without them; the annotations are inert PHPDoc comments unless you install the generator.
+
+### Optional setup
+
+```bash
+composer require darkaonline/l5-swagger
+php artisan vendor:publish --provider "L5Swagger\L5SwaggerServiceProvider"
+```
+
+Add a global `@OA\Info` annotation once — conventionally in `app/Http/Controllers/Controller.php`:
+
+```php
+/**
+ * @OA\Info(title="My API", version="1.0.0")
+ */
+class Controller extends BaseController { ... }
+```
+
+Generate the docs and open the interactive Swagger UI:
+
+```bash
+php artisan l5-swagger:generate
+# → http://your-app/api/documentation
+```
+
+### What is annotated in each generated action
+
+| Method | Annotation | Documents |
+|---|---|---|
+| `index` | `@OA\Get` | path, `per_page`, `search`, `sort_by`, `sort_dir`, `status` params; 200/401/403 |
+| `show` | `@OA\Get` | path `{id}` param; 200/404 |
+| `store` | `@OA\Post` | 201/422 |
+| `update` | `@OA\Put` | path `{id}`; 200/422 |
+| `destroy` | `@OA\Delete` | path `{id}`; 200/404 |
+
+The generated `{Name}Resource` carries a `@OA\Schema` annotation with all declared properties.
+
+---
+
+## Enums
+
+The generated `{Name}Status` is a PHP 8.1 backed string enum with three starter cases and
+helper methods:
+
+```php
+// app/Enums/ProductStatus.php
+enum ProductStatus: string
+{
+    case Active   = 'active';
+    case Inactive = 'inactive';
+    case Pending  = 'pending';
+
+    public function label(): string { ... }       // "Active", "Inactive", "Pending"
+    public function isActive(): bool { ... }       // true when === self::Active
+    public static function values(): array { ... } // ['active', 'inactive', 'pending']
+}
+```
+
+The generated model casts `status` automatically:
+
+```php
+// app/Models/Product.php
+protected $casts = [
+    'status' => ProductStatus::class,
+];
+```
+
+Usage examples:
+
+```php
+$product->status;                      // ProductStatus::Active
+$product->status->label();             // "Active"
+$product->status->value;               // "active"
+$product->status->isActive();          // true
+ProductStatus::values();               // ['active', 'inactive', 'pending']
+
+// In StoreProductRequest:
+'status' => ['required', \Illuminate\Validation\Rule::enum(ProductStatus::class)],
+```
+
+---
+
+## Policy
+
+The generated `{Name}Policy` uses `HandlesAuthorization` and starts with all gates open
+(`return true`). Harden the logic to match your business rules before production.
+
+### Registration
+
+```php
+// Option A — AuthServiceProvider (Laravel 10 / 11):
+protected $policies = [
+    Product::class => ProductPolicy::class,
+];
+
+// Option B — AppServiceProvider / boot() (any version):
+\Illuminate\Support\Facades\Gate::policy(Product::class, ProductPolicy::class);
+```
+
+The generated controller calls `$this->authorize()` for every action automatically:
+
+```php
+$this->authorize('viewAny', Product::class);  // index
+$this->authorize('view',    $product);         // show
+$this->authorize('create',  Product::class);   // store
+$this->authorize('update',  $product);         // update
+$this->authorize('delete',  $product);         // destroy
+```
+
+---
+
+## API Resource
+
+`{Name}Resource` extends `JsonResource` with a `toArray()` ready to customise.
+`{Name}ResourceCollection` wraps it for list responses.
+
+The generated controller returns:
+
+```php
+// Single resource
+return ApiResponse::success(new ProductResource($product));
+
+// Created
+return ApiResponse::created(new ProductResource($product));
+
+// Paginated list (via the filter's paginator)
+return ApiResponse::paginated($this->service->filter($request)->paginate());
+```
+
+---
+
+## Generated tests
+
+Both test stubs are **skipped** out of the box so your CI is green from the first commit.
+Each method has inline `TODO` instructions.
+
+```bash
+php artisan test tests/Feature/ProductTest.php      # all skipped ✓
+php artisan test tests/Unit/ProductServiceTest.php  # all skipped ✓
+```
+
+Enable the feature tests by:
+
+1. Registering the route: `Route::apiResource('products', ProductController::class);`
+2. Creating a factory: `php artisan make:factory ProductFactory --model=Product`
+3. Removing the `markTestSkipped()` calls
+
+---
+
+## Repository auto-binding
+
+By default (`auto_bind => true` in `config/base.php`), the package scans
+`app/Interfaces/*RepositoryInterface.php` at boot and binds each to its matching
+`app/Repositories/*Repository.php` — no manual registration required.
+
+To manage bindings explicitly, use `--provider` when generating:
+
+```bash
+php artisan make:module Product --provider
+# Creates app/Providers/RepositoryServiceProvider.php (once)
+# and appends the binding for Product.
+# Subsequent --provider runs are idempotent — no duplicate entries.
+```
+
+Then register the provider once:
+
+```php
+// bootstrap/providers.php  (Laravel 11+)
+App\Providers\RepositoryServiceProvider::class,
+
+// config/app.php  (Laravel 10)
+'providers' => [App\Providers\RepositoryServiceProvider::class],
+```
+
+Or disable auto-binding entirely and declare bindings in config:
+
+```php
+// config/base.php
+'auto_bind' => false,
+'bindings'  => [
+    \App\Interfaces\ProductRepositoryInterface::class
+        => \App\Repositories\ProductRepository::class,
+],
+```
+
+---
+
+## make:repository — deprecated alias
+
+> **Deprecated since v3.0.0.** `make:repository` will continue to work indefinitely
+> for backward compatibility, but **new projects should use `make:module`**.
+
+`make:repository` is a thin wrapper that calls `make:module` with all new components
+suppressed (`--no-resource --no-policy --no-test --no-enum --no-filter`), so the generated
+output is **identical** to what v2.x produced. All existing options (`--model`,
+`--controller`, `--no-service`, `--no-controller`, `--no-request`, `--no-migration`,
+`--provider`, `--force`) are forwarded transparently.
+
+A deprecation notice is printed at runtime:
+
+```
+⚠  make:repository is deprecated. Please use `php artisan make:module` instead.
+```
+
+```bash
+# These all still work exactly as before:
+php artisan make:repository Product
+php artisan make:repository BlogPost --model=Post --no-migration
+php artisan make:repository Order --controller=OrderApiController
+```
+
+---
+
+## base:create-database
+
+Creates the configured database if it does not already exist. Supports MySQL and PostgreSQL.
+
+```bash
+php artisan base:create-database [--connection=]
+```
+
+| Option | Description |
+|---|---|
+| `--connection=` | Laravel database connection name (defaults to `database.default`) |
+
+```bash
+php artisan base:create-database              # default connection
+php artisan base:create-database --connection=pgsql
+```
+
+- If the database already exists, the command exits successfully without changes.
+- MySQL: uses `charset` and `collation` from the connection config.
+- PostgreSQL: uses `charset` as the `ENCODING`.
+- Requires the matching PDO extension and a user with `CREATE DATABASE` privileges.
+
+---
+
+## Manual setup
+
+The generator covers most cases, but here is how to wire a module by hand if needed.
+
+### Interface
 
 ```php
 namespace App\Interfaces;
@@ -236,7 +655,7 @@ interface ProductRepositoryInterface extends RepositoryInterface
 }
 ```
 
-#### Repository
+### Repository
 
 ```php
 namespace App\Repositories;
@@ -254,12 +673,14 @@ class ProductRepository extends BaseRepository implements ProductRepositoryInter
 }
 ```
 
-#### Service
+### Service
 
 ```php
 namespace App\Services;
 
+use App\Filters\ProductFilters;
 use App\Interfaces\ProductRepositoryInterface;
+use Illuminate\Http\Request;
 use MuhammedSalama\Base\Services\BaseService;
 
 class ProductService extends BaseService
@@ -268,12 +689,15 @@ class ProductService extends BaseService
     {
         parent::__construct($repository);
     }
+
+    public function filter(Request $request): ProductFilters
+    {
+        return new ProductFilters($request, $this->repository->query());
+    }
 }
 ```
 
-#### Form Requests
-
-Validation lives in its own classes. Extend `BaseRequest`, which automatically returns the standard `422` envelope on failure — no extra code needed.
+### Form Requests
 
 ```php
 namespace App\Http\Requests\Product;
@@ -285,27 +709,9 @@ class StoreProductRequest extends BaseRequest
     public function rules(): array
     {
         return [
-            'name'  => 'required|string|max:255',
-            'price' => 'required|numeric|min:0',
-            'image' => 'nullable|image|max:2048',
-        ];
-    }
-}
-```
-
-```php
-namespace App\Http\Requests\Product;
-
-use MuhammedSalama\Base\Requests\BaseRequest;
-
-class UpdateProductRequest extends BaseRequest
-{
-    public function rules(): array
-    {
-        return [
-            'name'  => 'sometimes|string|max:255',
-            'price' => 'sometimes|numeric|min:0',
-            'image' => 'nullable|image|max:2048',
+            'name'   => 'required|string|max:255',
+            'price'  => 'required|numeric|min:0',
+            'status' => ['required', \Illuminate\Validation\Rule::enum(\App\Enums\ProductStatus::class)],
         ];
     }
 }
@@ -323,52 +729,56 @@ A failed validation response:
 }
 ```
 
-#### Controller
+### Controller
 
 ```php
-namespace App\Http\Controllers\Api;
+namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
 use App\Http\Requests\Product\StoreProductRequest;
 use App\Http\Requests\Product\UpdateProductRequest;
+use App\Http\Resources\ProductResource;
+use App\Models\Product;
 use App\Services\ProductService;
-use MuhammedSalama\Base\Traits\ApiResponseTrait;
-use MuhammedSalama\Base\Traits\ImageUploadTrait;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use MuhammedSalama\Base\Helpers\ApiResponse;
 
 class ProductController extends Controller
 {
-    use ApiResponseTrait, ImageUploadTrait;
-
     public function __construct(private ProductService $service) {}
 
-    public function index()
+    public function index(Request $request): JsonResponse
     {
-        return $this->paginated($this->service->paginate(15));
+        $this->authorize('viewAny', Product::class);
+        return ApiResponse::paginated($this->service->filter($request)->paginate());
     }
 
-    public function show(int $id)
+    public function show(int $id): JsonResponse
     {
-        return $this->success($this->service->find($id));
+        $product = $this->service->find($id);
+        $this->authorize('view', $product);
+        return ApiResponse::success(new ProductResource($product));
     }
 
-    public function store(StoreProductRequest $request)
+    public function store(StoreProductRequest $request): JsonResponse
     {
-        $data = $request->validated();
-        $data['image'] = $this->uploadImage($request, 'image', 'uploads/products');
-
-        return $this->created($this->service->store($data));
+        $this->authorize('create', Product::class);
+        return ApiResponse::created(new ProductResource($this->service->store($request->validated())));
     }
 
-    public function update(UpdateProductRequest $request, int $id)
+    public function update(UpdateProductRequest $request, int $id): JsonResponse
     {
-        return $this->success($this->service->update($id, $request->validated()));
+        $product = $this->service->find($id);
+        $this->authorize('update', $product);
+        return ApiResponse::success(new ProductResource($this->service->update($id, $request->validated())));
     }
 
-    public function destroy(int $id)
+    public function destroy(int $id): JsonResponse
     {
+        $product = $this->service->find($id);
+        $this->authorize('delete', $product);
         $this->service->destroy($id);
-
-        return $this->success(null, 'Deleted successfully');
+        return ApiResponse::success(null, 'Product deleted successfully.');
     }
 }
 ```
@@ -381,23 +791,23 @@ class ProductController extends Controller
 
 `MuhammedSalama\Base\Interfaces\RepositoryInterface`
 
-| Method | Signature | Returns | Notes |
-|---|---|---|---|
-| `all` | `all(array $columns, array $relations): Collection` | `Collection<int, Model>` | Eager-loads `$relations` |
-| `paginate` | `paginate(int $perPage, array $columns, array $relations): LengthAwarePaginator` | `LengthAwarePaginator` | |
-| `find` | `find(int\|string $id, array $columns, array $relations): ?Model` | `Model\|null` | Returns `null` when not found |
-| `findOrFail` | `findOrFail(int\|string $id, array $columns, array $relations): Model` | `Model` | Throws `ModelNotFoundException` |
-| `findBy` | `findBy(string $column, mixed $value, array $columns): ?Model` | `Model\|null` | First match |
-| `create` | `create(array $data): Model` | `Model` | Respects `$fillable`/`$guarded` |
-| `update` | `update(int\|string $id, array $data): Model` | `Model` | Finds, updates, returns model |
-| `delete` | `delete(int\|string $id): bool` | `bool` | Throws `ModelNotFoundException` if absent |
-| `query` | `query(): Builder` | `Builder` | Fresh query builder for complex queries |
+| Method | Returns | Notes |
+|---|---|---|
+| `all(array $columns, array $relations)` | `Collection<int, Model>` | Eager-loads `$relations` |
+| `paginate(int $perPage, array $columns, array $relations)` | `LengthAwarePaginator` | |
+| `find(int\|string $id, array $columns, array $relations)` | `?Model` | `null` when absent |
+| `findOrFail(int\|string $id, array $columns, array $relations)` | `Model` | Throws `ModelNotFoundException` |
+| `findBy(string $column, mixed $value, array $columns)` | `?Model` | First match |
+| `create(array $data)` | `Model` | Respects `$fillable`/`$guarded` |
+| `update(int\|string $id, array $data)` | `Model` | Finds, updates, returns model |
+| `delete(int\|string $id)` | `bool` | Throws if absent |
+| `query()` | `Builder` | Fresh query builder for complex queries |
 
 ### BaseRepository
 
-`MuhammedSalama\Base\Repositories\BaseRepository`
+`MuhammedSalama\Base\Repositories\BaseRepository` — implements `RepositoryInterface`.
 
-Implements `RepositoryInterface`. Extend it and inject the Eloquent model via the constructor:
+Extend it and inject the Eloquent model via the constructor:
 
 ```php
 class ProductRepository extends BaseRepository implements ProductRepositoryInterface
@@ -409,32 +819,30 @@ class ProductRepository extends BaseRepository implements ProductRepositoryInter
 }
 ```
 
-Additional helper not in the interface:
+Additional method not in the interface:
 
-| Method | Signature | Returns |
-|---|---|---|
-| `getModel` | `getModel(): Model` | The raw model instance |
-
-**Important:** The model's `$fillable` or `$guarded` controls which attributes can be mass-assigned via `create()` and `update()`. Always define one in your Eloquent model.
+| Method | Returns |
+|---|---|
+| `getModel(): Model` | The raw model instance |
 
 ### ServiceInterface
 
 `MuhammedSalama\Base\Interfaces\ServiceInterface`
 
-| Method | Signature | Returns | Notes |
-|---|---|---|---|
-| `all` | `all(array $columns, array $relations): Collection` | `Collection<int, Model>` | |
-| `paginate` | `paginate(int $perPage, array $columns, array $relations): LengthAwarePaginator` | `LengthAwarePaginator` | |
-| `find` | `find(int\|string $id, array $columns, array $relations): Model` | `Model` | Always throws on missing (calls `findOrFail`) |
-| `store` | `store(array $data): Model` | `Model` | |
-| `update` | `update(int\|string $id, array $data): Model` | `Model` | |
-| `destroy` | `destroy(int\|string $id): bool` | `bool` | |
+| Method | Returns | Notes |
+|---|---|---|
+| `all(array $columns, array $relations)` | `Collection<int, Model>` | |
+| `paginate(int $perPage, array $columns, array $relations)` | `LengthAwarePaginator` | |
+| `find(int\|string $id, array $columns, array $relations)` | `Model` | Always throws on missing |
+| `store(array $data)` | `Model` | |
+| `update(int\|string $id, array $data)` | `Model` | |
+| `destroy(int\|string $id)` | `bool` | |
 
 ### BaseService
 
-`MuhammedSalama\Base\Services\BaseService`
+`MuhammedSalama\Base\Services\BaseService` — implements `ServiceInterface`.
 
-Implements `ServiceInterface`. Extend it and inject the repository interface:
+Extend it and inject the repository interface:
 
 ```php
 class ProductService extends BaseService
@@ -446,151 +854,87 @@ class ProductService extends BaseService
 }
 ```
 
-Additional helper not in the interface:
+Additional method not in the interface:
 
-| Method | Returns | Notes |
-|---|---|---|
-| `repository(): RepositoryInterface` | `RepositoryInterface` | Access the underlying repository for custom queries |
+| Method | Returns |
+|---|---|
+| `repository(): RepositoryInterface` | The underlying repository (for custom queries) |
 
 ### BaseRequest
 
-`MuhammedSalama\Base\Requests\BaseRequest`
+`MuhammedSalama\Base\Requests\BaseRequest` — extends Laravel's `FormRequest`.
 
-Extends `Illuminate\Foundation\Http\FormRequest`. Override `rules()` in your child class.
-
-| Member | Type | Default | Notes |
-|---|---|---|---|
-| `authorize()` | `bool` | `true` | Override to add gate/policy checks |
-| `rules()` | `array` (abstract) | — | Define validation rules |
-| `failedValidation(Validator $v)` | `void` | — | Throws `HttpResponseException` with the `422` envelope |
-
-```php
-class StoreProductRequest extends BaseRequest
-{
-    public function rules(): array
-    {
-        return ['name' => 'required|string|max:255'];
-    }
-}
-```
+| Member | Default | Notes |
+|---|---|---|
+| `authorize()` | `true` | Override to add gate/policy checks |
+| `rules()` | — | Define validation rules (abstract-like) |
+| `failedValidation()` | — | Throws `HttpResponseException` with 422 envelope |
 
 ### ApiResponse
 
-`MuhammedSalama\Base\Helpers\ApiResponse`
-
-Static helper. All methods return `Illuminate\Http\JsonResponse`.
+`MuhammedSalama\Base\Helpers\ApiResponse` — all methods return `JsonResponse`.
 
 ```php
-use MuhammedSalama\Base\Helpers\ApiResponse;
-
-// Success (200)
-ApiResponse::success($data, 'Custom message');
-
-// Created (201)
-ApiResponse::created($data);
-
-// No Content (204)
-ApiResponse::noContent();
-
-// Error (default 400)
-ApiResponse::error('Something went wrong', 400, $errorDetails);
-
-// Validation (422)
-ApiResponse::validation($validator->errors());
-
-// Not Found (404)
-ApiResponse::notFound('Product not found');
-
-// Unauthorized (401)
-ApiResponse::unauthorized();
-
-// Forbidden (403)
-ApiResponse::forbidden();
-
-// Paginated (200, includes meta block)
-ApiResponse::paginated($paginator, 'Success');
+ApiResponse::success($data, 'Message');           // 200
+ApiResponse::created($data);                       // 201
+ApiResponse::noContent();                          // 204
+ApiResponse::error('Message', 400, $errors);
+ApiResponse::validation($errors);                  // 422
+ApiResponse::notFound('Message');                  // 404
+ApiResponse::unauthorized();                       // 401
+ApiResponse::forbidden();                          // 403
+ApiResponse::paginated($paginator, 'Message');     // 200 + meta
 ```
 
 **Standard success envelope:**
 
 ```json
-{
-    "status": true,
-    "message": "Success",
-    "data": { ... }
-}
+{ "status": true, "message": "Success", "data": { ... } }
 ```
 
 **Standard error envelope:**
 
 ```json
-{
-    "status": false,
-    "message": "Validation error",
-    "errors": {
-        "name": ["The name field is required."]
-    }
-}
+{ "status": false, "message": "Validation error", "errors": { ... } }
 ```
 
 **Paginated envelope:**
 
 ```json
 {
-    "status": true,
-    "message": "Success",
+    "status": true, "message": "Success",
     "data": [ ... ],
-    "meta": {
-        "current_page": 1,
-        "last_page": 5,
-        "per_page": 15,
-        "total": 72
-    }
+    "meta": { "current_page": 1, "last_page": 5, "per_page": 15, "total": 72 }
 }
 ```
 
 ### ApiResponseTrait
 
-`MuhammedSalama\Base\Traits\ApiResponseTrait`
+`MuhammedSalama\Base\Traits\ApiResponseTrait` — use inside controllers to call response
+methods as `$this->success(...)` instead of `ApiResponse::success(...)`. Produces the
+identical JSON envelope.
 
-Use inside controllers to call response methods as `$this->success(...)` instead of the static `ApiResponse::success(...)`. Both produce the identical JSON envelope.
-
-```php
-use MuhammedSalama\Base\Traits\ApiResponseTrait;
-
-class ProductController extends Controller
-{
-    use ApiResponseTrait;
-
-    public function index()
-    {
-        return $this->success($data);
-    }
-}
-```
-
-| Method | Parameters | HTTP status |
-|---|---|---|
-| `success` | `($data, $message, $code)` | 200 (default) |
-| `created` | `($data, $message)` | 201 |
-| `error` | `($message, $code, $errors)` | 400 (default) |
-| `validationError` | `($errors, $message)` | 422 |
-| `notFound` | `($message)` | 404 |
-| `unauthorized` | `($message)` | 401 |
-| `forbidden` | `($message)` | 403 |
-| `paginated` | `($paginator, $message)` | 200 |
+| Method | Status |
+|---|---|
+| `success($data, $message, $code)` | 200 |
+| `created($data, $message)` | 201 |
+| `error($message, $code, $errors)` | 400 |
+| `validationError($errors, $message)` | 422 |
+| `notFound($message)` | 404 |
+| `unauthorized($message)` | 401 |
+| `forbidden($message)` | 403 |
+| `paginated($paginator, $message)` | 200 |
 
 ### ImageUploadTrait
 
-`MuhammedSalama\Base\Traits\ImageUploadTrait`
-
-Use inside controllers or services. Files are stored under `public_path($path)` and the relative path is returned. Extensions are determined from the file's actual MIME type (not the client-supplied filename), protecting against extension-spoofing attacks.
+`MuhammedSalama\Base\Traits\ImageUploadTrait` — extensions are derived from MIME type, not
+the client-supplied filename, preventing extension-spoofing attacks.
 
 | Method | Returns | Description |
 |---|---|---|
 | `uploadImage($request, $input, $path)` | `string\|null` | Store a single image |
 | `uploadMultiImage($request, $input, $path)` | `array<int, string>` | Store multiple images |
-| `updateImage($request, $input, $path, $oldPath)` | `string\|null` | Replace an image, deletes the old file |
+| `updateImage($request, $input, $path, $oldPath)` | `string\|null` | Replace an image, deletes old file |
 | `deleteImage($path)` | `void` | Delete an image |
 
 ```php
@@ -604,7 +948,7 @@ $path = $this->updateImage($request, 'image', 'uploads/products', $product->imag
 $this->deleteImage($product->image);
 ```
 
-Always validate uploads in your Form Request before calling these methods:
+Always validate uploads in the Form Request first:
 
 ```php
 'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
@@ -612,98 +956,9 @@ Always validate uploads in your Form Request before calling these methods:
 
 ---
 
-## Commands
-
-### `make:repository`
-
-Generates the full Repository–Service–Controller structure for a named resource.
-
-```bash
-php artisan make:repository {name} [options]
-```
-
-| Argument / Option | Description |
-|---|---|
-| `name` | Base name, e.g. `Product` (StudlyCase) |
-| `--model=` | Eloquent model name when it differs from `name` |
-| `--controller=` | Custom controller class name (defaults to `{Name}Controller`) |
-| `--no-model` | Skip generating the Eloquent model |
-| `--no-service` | Skip generating the Service class |
-| `--no-controller` | Skip generating the Controller class |
-| `--no-request` | Skip Form Request classes (controller falls back to plain `Request`) |
-| `--no-migration` | Skip generating the migration |
-| `--provider` | Create / update `RepositoryServiceProvider` with an explicit binding |
-| `--force` | Overwrite files that already exist (never overwrites model or provider) |
-
-**Examples:**
-
-```bash
-# Full scaffold (creates model, interface, repository, service, requests, controller, migration)
-php artisan make:repository Product
-
-# Wrap a model whose name differs from the resource name
-php artisan make:repository BlogPost --model=Post
-
-# Custom controller name, skip migration
-php artisan make:repository Order --controller=OrderApiController --no-migration
-
-# Skip auto-generated model (e.g. model already exists or is hand-crafted)
-php artisan make:repository Invoice --no-model
-
-# Explicit RepositoryServiceProvider binding instead of auto_bind
-php artisan make:repository Product --provider
-
-# Minimal: interface + repository + model only
-php artisan make:repository Tag --no-service --no-controller --no-request --no-migration
-```
-
-**Generated files:**
-
-```
-app/Models/{Model}.php                           (unless --no-model; never overwritten)
-app/Interfaces/{Name}RepositoryInterface.php
-app/Repositories/{Name}Repository.php
-app/Services/{Name}Service.php                   (unless --no-service)
-app/Http/Requests/{Name}/Store{Name}Request.php  (unless --no-request)
-app/Http/Requests/{Name}/Update{Name}Request.php (unless --no-request)
-app/Http/Controllers/{Controller}.php            (unless --no-controller)
-database/migrations/xxxx_create_{table}_table.php (unless --no-migration)
-app/Providers/RepositoryServiceProvider.php      (only with --provider; never overwritten)
-```
-
-When `auto_bind` is enabled (the default), the interface is automatically wired to the repository — no manual binding is needed. Use `--provider` to add an explicit `RepositoryServiceProvider` binding instead. See [Configuration](#configuration).
-
-### `base:create-database`
-
-Creates the configured database if it does not already exist. Supports MySQL and PostgreSQL.
-
-```bash
-php artisan base:create-database [--connection=]
-```
-
-| Option | Description |
-|---|---|
-| `--connection=` | Laravel database connection name (defaults to `database.default`) |
-
-```bash
-# Use the default connection
-php artisan base:create-database
-
-# Use a specific connection
-php artisan base:create-database --connection=pgsql
-```
-
-- If the database already exists the command does nothing and exits successfully.
-- MySQL: uses the `charset` and `collation` from the connection config.
-- PostgreSQL: uses the `charset` as the `ENCODING`.
-- Only `mysql` and `pgsql` drivers are supported.
-- Requires the matching PDO extension (`pdo_mysql` / `pdo_pgsql`) and a database user with `CREATE DATABASE` privileges.
-
----
-
 ## Configuration
 
-Publish the config file:
+Publish the config:
 
 ```bash
 php artisan vendor:publish --tag=base-config
@@ -713,172 +968,61 @@ This creates `config/base.php`:
 
 ```php
 return [
-
-    // When true, App\Interfaces\{Name}RepositoryInterface is automatically
-    // bound to App\Repositories\{Name}Repository by naming convention.
+    // Auto-bind App\Interfaces\{Name}RepositoryInterface → App\Repositories\{Name}Repository
     'auto_bind' => true,
 
-    // Manual bindings for anything that doesn't follow the convention.
-    'bindings' => [
+    // Explicit bindings always registered regardless of auto_bind
+    'bindings'  => [
         // \App\Interfaces\ProductRepositoryInterface::class
         //     => \App\Repositories\EloquentProductRepository::class,
     ],
-
 ];
 ```
-
-**Auto-binding** (enabled by default) scans `app/Interfaces/` for files matching `*RepositoryInterface.php` and binds each to the matching `*Repository` in `app/Repositories/`. Disable it and use `bindings` for full control:
-
-```php
-'auto_bind' => false,
-'bindings' => [
-    \App\Interfaces\ProductRepositoryInterface::class
-        => \App\Repositories\ProductRepository::class,
-],
-```
-
-You can also register bindings in your own `AppServiceProvider` if you prefer:
-
-```php
-$this->app->bind(
-    \App\Interfaces\ProductRepositoryInterface::class,
-    \App\Repositories\ProductRepository::class,
-);
-```
-
-### RepositoryServiceProvider (explicit bindings via `--provider`)
-
-Running `make:repository` with the `--provider` flag creates (or updates) `app/Providers/RepositoryServiceProvider.php` and inserts an explicit `$this->app->bind(…)` call for the generated interface:
-
-```bash
-php artisan make:repository Product --provider
-```
-
-**What the generated provider looks like** after two resources:
-
-```php
-namespace App\Providers;
-
-use Illuminate\Support\ServiceProvider;
-
-class RepositoryServiceProvider extends ServiceProvider
-{
-    public function register(): void
-    {
-        $this->app->bind(
-            \App\Interfaces\ProductRepositoryInterface::class,
-            \App\Repositories\ProductRepository::class,
-        );
-        $this->app->bind(
-            \App\Interfaces\OrderRepositoryInterface::class,
-            \App\Repositories\OrderRepository::class,
-        );
-        // {{ bindings }}   ← new resources are always inserted here
-    }
-}
-```
-
-**Register the provider in your application:**
-
-*Laravel 11 / 12 / 13* — add to `bootstrap/providers.php`:
-
-```php
-return [
-    App\Providers\AppServiceProvider::class,
-    App\Providers\RepositoryServiceProvider::class,  // ← add this
-];
-```
-
-*Laravel 10* — add to the `providers` array in `config/app.php`:
-
-```php
-'providers' => [
-    // ...
-    App\Providers\RepositoryServiceProvider::class,
-],
-```
-
-**Relationship with `auto_bind`:**
-
-| Scenario | Result |
-|---|---|
-| `auto_bind = true` (default), no `--provider` | Convention-based binding — no provider file needed |
-| `auto_bind = true`, `--provider` used | Both mechanisms bind the same pair; last-registered wins (identical result, harmless) |
-| `auto_bind = false`, `--provider` used | Provider is the sole binding mechanism — recommended for explicit control |
-
-When using `--provider` as the primary binding strategy, disable `auto_bind` to keep bindings in one place:
-
-```php
-// config/base.php
-'auto_bind' => false,
-```
-
-**Idempotency guarantees:**
-
-- Re-running `make:repository Product --provider` will not add a duplicate binding.
-- The provider file is never overwritten, even with `--force`.
-- The model file is never overwritten, even with `--force`.
 
 ---
 
 ## Publishing helpers and traits
 
-By default, `ApiResponse` and the traits are used directly from the package namespace (`MuhammedSalama\Base\...`) — no copying is needed and you receive fixes automatically when updating the package.
-
-If you want **editable local copies** under the `App\` namespace, publish them:
+By default, `ApiResponse` and the traits are used directly from the package namespace — no copying needed. If you want **editable local copies** under `App\`:
 
 ```bash
-# ApiResponse helper → app/Helpers/ApiResponse.php
-php artisan vendor:publish --tag=base-helpers
-
-# ApiResponseTrait + ImageUploadTrait → app/Traits/
-php artisan vendor:publish --tag=base-traits
-
-# Config → config/base.php
-php artisan vendor:publish --tag=base-config
+php artisan vendor:publish --tag=base-helpers  # → app/Helpers/ApiResponse.php
+php artisan vendor:publish --tag=base-traits   # → app/Traits/ApiResponseTrait.php + ImageUploadTrait.php
+php artisan vendor:publish --tag=base-config   # → config/base.php
 ```
 
-After publishing, switch your `use` statements to the `App\Helpers` / `App\Traits` namespaces. Published files will not receive automatic updates — treat them as your own code.
+After publishing, switch `use` statements to the `App\Helpers` / `App\Traits` namespaces. Published files will not receive automatic updates — treat them as your own code.
 
 ---
 
 ## Testing and static analysis
 
-Install dev dependencies:
-
 ```bash
 composer install
+composer test     # PHPUnit + Orchestra Testbench (SQLite in-memory)
+composer analyse  # PHPStan level 5 + Larastan
 ```
 
-Run the test suite (PHPUnit + Orchestra Testbench, SQLite in-memory):
-
-```bash
-composer test
-```
-
-Run static analysis (PHPStan level 5 + Larastan):
-
-```bash
-composer analyse
-```
-
-Both commands run on every push and pull request via GitHub Actions across PHP 8.1–8.4 and Laravel 10/11/12/13.
+The CI matrix covers PHP 8.1–8.4 × Laravel 10/11/12/13 on every push and pull request.
 
 ---
 
 ## Troubleshooting
 
-**`Deprecation Notice: Function curl_close() is deprecated` during Composer commands.**
-These come from Composer running on PHP 8.5+, not from this package. Run `composer self-update` or use PHP 8.4 to suppress them.
+**`Deprecation Notice: Function curl_close() is deprecated` during Composer.**
+These come from Composer running on PHP 8.5+. Run `composer self-update` or use PHP 8.4.
 
 **`Your requirements could not be resolved … nette/schema requires php 8.1 - 8.4`.**
-A transitive dependency in your project is locked to a version that predates PHP 8.5. Update it: `composer update nette/schema --with-all-dependencies`.
+A transitive dependency predates PHP 8.5. Update it: `composer update nette/schema --with-all-dependencies`.
 
 **Auto-binding does not seem to work.**
-Check that `app/Interfaces/` exists and the files match the pattern `{Name}RepositoryInterface.php`. Both the interface class and the implementation class must be loadable (verify with `php artisan tinker` → `class_exists()`). Make sure `auto_bind` is `true` in `config/base.php`.
+Verify that `app/Interfaces/` exists and files match `*RepositoryInterface.php`. Both the interface class and the implementation must be autoloadable (`class_exists()` in `tinker`). Confirm `auto_bind => true` in `config/base.php`.
 
-**`Class … not found` after running `make:repository`.**
-Run `composer dump-autoload` so the PSR-4 autoloader picks up the newly created files.
+**`Class … not found` after running `make:module`.**
+Run `composer dump-autoload` so the PSR-4 autoloader discovers the newly created files.
+
+**Policy gates throw `AuthorizationException` on every request.**
+The generated policy starts with all gates open (`return true`). If you bound the policy but all requests fail, check that your `Auth::user()` is set (routes are authenticated). If running API tests unauthenticated, call `$this->withoutMiddleware()` or mock the Gate facade.
 
 ---
 
@@ -896,7 +1040,7 @@ Contributions are welcome. Please:
 2. Write tests for any change in behaviour.
 3. Ensure `composer test` and `composer analyse` both pass locally.
 4. Open a pull request against `main` with a clear description of the change.
-5. **CI must be green before merging.** The workflow runs `composer test` across PHP 8.1–8.4 and Laravel 10/11/12/13 (with appropriate PHP-version excludes), plus PHPStan static analysis. Consider enabling [GitHub branch-protection rules](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/about-protected-branches) to require all status checks to pass before a PR can be merged.
+5. **CI must be green before merging.** The workflow runs `composer test` across PHP 8.1–8.4 and Laravel 10/11/12/13 (with appropriate PHP-version excludes), plus PHPStan static analysis.
 
 ---
 

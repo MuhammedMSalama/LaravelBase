@@ -1,13 +1,21 @@
 {
     "name": "muhammedsalama/laravel-base",
-    "description": "Laravel base package: Repository pattern, Services, Interfaces, external validation, Helpers (ApiResponse), Traits, and generator commands.",
+    "description": "Laravel module generator: one command scaffolds Model, Migration, Enum, Filter+Pagination, Interface, Repository, Service, Form Requests, API Resource, Policy, Controller (Swagger/OA), and Tests.",
     "type": "library",
     "license": "MIT",
     "homepage": "https://github.com/Muhammed2024Salama",
     "keywords": [
         "laravel",
+        "module-generator",
         "repository",
         "service",
+        "api-resource",
+        "filter",
+        "pagination",
+        "swagger",
+        "openapi",
+        "enum",
+        "policy",
         "api-response",
         "form-request",
         "trait"
@@ -33,6 +41,10 @@
         "orchestra/testbench": "^8.0|^9.0|^10.0|^11.0",
         "phpunit/phpunit": "^10.5|^11.0|^12.0",
         "larastan/larastan": "^2.9|^3.0"
+    },
+    "suggest": {
+        "darkaonline/l5-swagger": "Generate interactive Swagger UI docs from the @OA annotations in generated controllers/resources",
+        "zircote/swagger-php": "Required by l5-swagger for parsing @OA doc-block annotations"
     },
     "autoload": {
         "psr-4": {

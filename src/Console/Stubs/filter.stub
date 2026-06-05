@@ -1,0 +1,33 @@
+<?php
+
+namespace {{ rootNamespace }}Filters;
+
+use MuhammedSalama\Base\Filters\AbstractFilter;
+
+class {{ class }}Filters extends AbstractFilter
+{
+    /**
+     * Whitelisted filter columns.
+     * Key = request parameter name (must match a real DB column).
+     * Value = SQL operator: '=', 'like', '>', '<', '>=', '<=', '!='.
+     *
+     * @var array<string, string>
+     */
+    protected array $filters = [
+        'status' => '=',
+    ];
+
+    /**
+     * Columns the client may sort by (?sort_by=column&sort_dir=asc|desc).
+     *
+     * @var list<string>
+     */
+    protected array $sortable = ['id', 'created_at'];
+
+    /**
+     * Columns searched with a single LIKE query when ?search= is present.
+     *
+     * @var list<string>
+     */
+    protected array $searchable = ['name'];
+}

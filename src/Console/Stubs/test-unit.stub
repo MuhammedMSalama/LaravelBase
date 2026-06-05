@@ -1,0 +1,32 @@
+<?php
+
+namespace Tests\Unit;
+
+use Tests\TestCase;
+
+/**
+ * Generated unit tests for {{ class }}Service.
+ *
+ * Replace the markTestSkipped() calls with real assertions once
+ * {{ class }}Service is bound in the service container.
+ */
+class {{ class }}ServiceTest extends TestCase
+{
+    public function test_{{ modelVariable }}_service_resolves_from_container(): void
+    {
+        $this->markTestSkipped(
+            'Ensure {{ class }}RepositoryInterface is bound, then replace with: ' .
+            '$service = $this->app->make(\{{ rootNamespace }}Services\{{ class }}Service::class); $this->assertInstanceOf(...).'
+        );
+    }
+
+    public function test_{{ modelVariable }}_service_store_creates_record(): void
+    {
+        $this->markTestSkipped('Implement with a seeded in-memory database.');
+    }
+
+    public function test_{{ modelVariable }}_service_filter_returns_filter_instance(): void
+    {
+        $this->markTestSkipped('Implement: assert filter() returns {{ class }}Filters.');
+    }
+}
