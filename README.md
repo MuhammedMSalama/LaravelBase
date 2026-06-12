@@ -1,10 +1,9 @@
 <h1 align="center">Laravel Base</h1>
 
 <p align="center">
-  <strong>Professional module generator and Repository–Service scaffolding for Laravel APIs.</strong><br>
-  One command scaffolds a complete module — Model, Migration, Enum, Filter+Pagination,<br>
-  Interface, Repository, Service, Requests, Resource, Policy, Controller (with Swagger/OA),<br>
-  and Feature + Unit tests. Stop rewriting boilerplate and focus on business logic.
+  One command. A complete, production-ready API module.<br>
+  Model &middot; Migration &middot; Enum &middot; Filter &middot; Repository &middot; Service
+  &middot; Requests &middot; Resource &middot; Policy &middot; Controller &middot; Tests
 </p>
 
 <p align="center">
@@ -25,12 +24,42 @@
   </a>
 </p>
 
+<p align="center">
+  <img src="docs/demo.gif" alt="make:module Product demo" width="700">
+</p>
+
+---
+
+```bash
+php artisan make:module Product
+```
+
+One command generates **15 files** across every layer of your REST API:
+
+| Layer | What is generated |
+|---|---|
+| Data | Model, driver-aware migration, repository interface, repository |
+| Domain | Service, filter class (whitelist-safe column filtering + pagination) |
+| HTTP | Controller (Swagger-annotated), store &amp; update form requests, API resource, resource collection |
+| Auth | Policy with CRUD gates, wired into every controller action |
+| Status | PHP 8.1 backed string enum (`active / inactive / pending`), auto-cast by the model |
+| Tests | Feature test + unit test stubs — pre-skipped so CI is green from commit one |
+
+Then add one route:
+
+```php
+Route::apiResource('products', ProductController::class);
+```
+
+Your API is running, documented, authorized, and tested.
+
 ---
 
 ## Table of Contents
 
-- [Why use this?](#why-use-this)
+- [Why LaravelBase?](#why-laravelbase)
 - [Features](#features)
+- [Laravel Artisan vs LaravelBase](#laravel-artisan-vs-laravelbase)
 - [Requirements](#requirements)
 - [Installation](#installation)
 - [Quick Start](#quick-start)
@@ -72,9 +101,19 @@
 
 ---
 
-## Why use this?
+## Why LaravelBase?
 
-Every Laravel API project ends up writing the same base classes: a `BaseRepository` with CRUD methods, a `BaseService` that wraps it, a `FormRequest` that returns JSON errors instead of redirecting, and a handful of response-shape helpers. v3 takes this further — `make:module` scaffolds the **entire vertical slice** of a module (data layer, business logic, HTTP layer, authorization, docs, and tests) in a single command, with real, idiomatic code you can ship immediately.
+Every Laravel API project ends up writing the same boilerplate: a repository, a service, a form request that returns JSON errors, and a handful of response helpers. You write them once, then copy-paste across every project.
+
+LaravelBase eliminates that tax. The package ships pre-written, production-hardened base classes and a generator that scaffolds a complete vertical slice — not just the model, not just the controller, but every layer wired together and ready to ship:
+
+- **No `ServiceProvider` edits for the common case** — interfaces are auto-bound to implementations by naming convention at boot.
+- **No column-injection vulnerabilities** — `AbstractFilter` accepts only columns you explicitly whitelist; unknown request parameters are silently ignored.
+- **No documentation debt** — generated controllers carry `@OA` Swagger annotations; install `l5-swagger` and your API is self-documented.
+- **No broken CI** — generated test stubs are pre-skipped so your pipeline is green from the first commit.
+- **Your code, your rules** — generated files live in `app/`; edit, extend, or delete them freely. They are never re-generated unless you pass `--force`.
+
+The generated code is idiomatic Laravel — no framework-within-a-framework, no magic, no lock-in.
 
 ---
 
@@ -98,6 +137,35 @@ Every Laravel API project ends up writing the same base classes: a `BaseReposito
 | **Image handling** | Secure upload / update / delete via `ImageUploadTrait` (MIME-derived extension) |
 | **Auto-binding** | `*RepositoryInterface` auto-bound to `*Repository` by naming convention — no manual registration |
 | **Laravel 10/11/12/13, PHP 8.1+** | No upper-bound constraint on Laravel version |
+
+---
+
+## Laravel Artisan vs LaravelBase
+
+| Capability | Laravel Artisan (built-in) | LaravelBase v3 |
+|---|---|---|
+| Generate Eloquent model | `make:model` | Included in `make:module` by default |
+| Generate migration | `make:migration` (separate command) | Auto-generated, **driver-aware** — `json()` on MySQL/PG, `text()` with notice on SQLite |
+| Repository pattern | Not provided | `BaseRepository` + `RepositoryInterface` + generated `{Name}Repository` + `{Name}RepositoryInterface` |
+| Service layer | Not provided | `BaseService` + `ServiceInterface` + generated `{Name}Service` |
+| Controller | `make:controller --api` (empty method bodies) | Full CRUD controller with `$this->authorize()`, typed requests, `ApiResponse` calls, and Swagger annotations |
+| Form Requests | `make:request` (separate command, manual wiring) | `Store{Name}Request` + `Update{Name}Request` generated and wired; `BaseRequest` returns JSON 422 envelope automatically |
+| JSON API response helper | Not provided | `ApiResponse` — `success` / `created` / `error` / `notFound` / `paginated` with a consistent `{status, message, data, meta}` envelope |
+| Status Enum | Not provided | PHP 8.1 backed string enum with `label()`, `isActive()`, `values()`; model casts `status` automatically |
+| Query filtering + pagination | Not provided | `AbstractFilter`: whitelisted column filters, LIKE search, global `?search=`, sort whitelist, `?per_page=` clamped to [1, 100] |
+| API Resource + Collection | `make:resource` (separate command) | `{Name}Resource` + `{Name}ResourceCollection` generated and wired into controller; includes `@OA\Schema` annotation |
+| Policy | `make:policy` (separate command, manual registration) | `{Name}Policy` with `HandlesAuthorization`, all CRUD gates; controller calls `$this->authorize()` for every action |
+| Swagger / OpenAPI docs | Not provided | All 5 CRUD actions annotated (`@OA\Get/Post/Put/Delete`); compatible with `darkaonline/l5-swagger` |
+| Repository auto-binding | Not provided | Convention-based: `*RepositoryInterface` → `*Repository` resolved at boot; no `ServiceProvider` edit required |
+| Explicit provider binding | Not provided | `--provider` flag creates/updates `RepositoryServiceProvider`; idempotent on re-runs |
+| Generated tests | Not provided | Feature + Unit test stubs, pre-skipped (CI stays green), with inline TODO instructions |
+| Database creation command | Not provided | `base:create-database [--connection=]` — MySQL and PostgreSQL |
+| Image upload helper | Not provided | `ImageUploadTrait`: MIME-derived extension (prevents extension-spoofing), upload / update / delete |
+| Subset generation | N/A | `--only=` / `--except=` — generate any combination of the 15 components |
+| Per-component skip flags | N/A | `--no-model`, `--no-migration`, `--no-enum`, `--no-filter`, `--no-service`, `--no-request`, `--no-resource`, `--no-policy`, `--no-controller`, `--no-test` |
+| Laravel version support | Current only | 10, 11, 12, 13 |
+| PHP version support | Current only | 8.1, 8.2, 8.3, 8.4 |
+| CI matrix | N/A | PHP 8.1–8.4 × Laravel 10–13 + prefer-lowest + PHPStan level 5 + `make:module` smoke test |
 
 ---
 
