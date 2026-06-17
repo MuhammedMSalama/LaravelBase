@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MuhammedSalama\Base\Tests\Unit;
 
 use Illuminate\Database\Eloquent\Collection;
@@ -14,6 +16,7 @@ use MuhammedSalama\Base\Tests\TestCase;
 class BaseServiceTest extends TestCase
 {
     private PostRepository $repository;
+
     private BaseService $service;
 
     protected function setUp(): void
@@ -26,10 +29,9 @@ class BaseServiceTest extends TestCase
             $table->timestamps();
         });
 
-        $this->repository = new PostRepository(new Post());
+        $this->repository = new PostRepository(new Post);
 
-        $this->service = new class($this->repository) extends BaseService {
-        };
+        $this->service = new class($this->repository) extends BaseService {};
     }
 
     public function test_store_creates_a_record(): void

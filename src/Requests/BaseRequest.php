@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MuhammedSalama\Base\Requests;
 
 use Illuminate\Contracts\Validation\Validator;
@@ -19,8 +21,6 @@ abstract class BaseRequest extends FormRequest
     /**
      * By default the request is authorized. Override in child classes
      * when you need policy/gate checks.
-     *
-     * @return bool
      */
     public function authorize(): bool
     {
@@ -28,18 +28,13 @@ abstract class BaseRequest extends FormRequest
     }
 
     /**
-     * Define your validation rules in the child request.
-     *
-     * @return array
+     * @return array<string, mixed>
      */
     abstract public function rules(): array;
 
     /**
      * Return a consistent JSON envelope on validation failure
      * instead of Laravel's default redirect/response.
-     *
-     * @param Validator $validator
-     * @return void
      *
      * @throws HttpResponseException
      */

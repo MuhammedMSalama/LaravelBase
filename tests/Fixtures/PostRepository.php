@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MuhammedSalama\Base\Tests\Fixtures;
 
 use MuhammedSalama\Base\Repositories\BaseRepository;

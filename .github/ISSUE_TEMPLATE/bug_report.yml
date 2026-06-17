@@ -1,0 +1,87 @@
+name: Bug report
+description: Report a reproducible problem in LaravelBase.
+title: "[Bug]: "
+labels: ["bug", "needs triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping improve LaravelBase. Please include a minimal reproduction so maintainers can verify the issue quickly.
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Pre-flight checks
+      options:
+        - label: I have searched existing issues and discussions.
+          required: true
+        - label: I have read the documentation and changelog.
+          required: true
+        - label: This is not a security vulnerability.
+          required: true
+  - type: input
+    id: package-version
+    attributes:
+      label: LaravelBase version
+      placeholder: "3.0.1"
+    validations:
+      required: true
+  - type: input
+    id: laravel-version
+    attributes:
+      label: Laravel version
+      placeholder: "12.0"
+    validations:
+      required: true
+  - type: input
+    id: php-version
+    attributes:
+      label: PHP version
+      placeholder: "8.3.0"
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Affected area
+      options:
+        - make:module
+        - make:repository
+        - base:create-database
+        - BaseRepository
+        - BaseService
+        - AbstractFilter
+        - BaseRequest
+        - ApiResponse
+        - ImageUploadTrait
+        - Documentation
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: Describe the actual behavior and what you expected instead.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: How can we reproduce it?
+      description: Include commands, generated files, routes, models, migrations, or a minimal repository link.
+      placeholder: |
+        composer require muhammedsalama/laravel-base
+        php artisan make:module Product
+    validations:
+      required: true
+  - type: textarea
+    id: output
+    attributes:
+      label: Relevant output
+      description: Paste stack traces, command output, or failing assertions.
+      render: shell
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Add any configuration, database driver, or generated stub details that may help.

@@ -1,12 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace {{ rootNamespace }}Models;
 
 use Illuminate\Database\Eloquent\Model;
 
 class {{ model }} extends Model
 {
-    // TODO: restrict mass-assignment. Replace with a proper $fillable list.
-    // Example: protected $fillable = ['name', 'email'];
     protected $guarded = [];
 }

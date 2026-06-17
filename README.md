@@ -13,6 +13,9 @@
   <a href="https://packagist.org/packages/muhammedsalama/laravel-base">
     <img src="https://img.shields.io/packagist/dt/muhammedsalama/laravel-base?style=flat-square" alt="Total Downloads">
   </a>
+  <a href="https://github.com/Muhammed2024Salama/LaravelBase/actions/workflows/ci.yml">
+    <img src="https://img.shields.io/github/actions/workflow/status/Muhammed2024Salama/LaravelBase/ci.yml?branch=main&style=flat-square&label=PHPStan" alt="PHPStan">
+  </a>
   <a href="https://packagist.org/packages/muhammedsalama/laravel-base">
     <img src="https://img.shields.io/packagist/php-v/muhammedsalama/laravel-base?style=flat-square" alt="PHP Version">
   </a>
@@ -1114,7 +1117,7 @@ Contributions are welcome. Please:
 
 ## Security
 
-If you discover a security vulnerability, please open a confidential issue or contact the author directly. Do **not** disclose vulnerabilities publicly until they have been addressed.
+If you discover a security vulnerability, please use [GitHub private vulnerability reporting](https://github.com/Muhammed2024Salama/LaravelBase/security/advisories/new) or contact the maintainer at <devmuhammedsalama@gmail.com>. Do **not** disclose vulnerabilities publicly until they have been addressed.
 
 ---
 

@@ -1,8 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace {{ rootNamespace }}Http\Controllers;
 
 use {{ rootNamespace }}Services\{{ class }}Service;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use MuhammedSalama\Base\Traits\ApiResponseTrait;
 
@@ -14,29 +17,29 @@ class {{ controller }} extends Controller
     {
     }
 
-    public function index()
+    public function index(): JsonResponse
     {
         return $this->success($this->service->all());
     }
 
-    public function show($id)
+    public function show(int|string $id): JsonResponse
     {
         return $this->success($this->service->find($id));
     }
 
-    public function store(Request $request)
+    public function store(Request $request): JsonResponse
     {
         // TODO: add validation — e.g. $request->validate(['field' => 'required|string'])
         return $this->created($this->service->store($request->except(['_token', '_method'])));
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, int|string $id): JsonResponse
     {
         // TODO: add validation — e.g. $request->validate(['field' => 'sometimes|string'])
         return $this->success($this->service->update($id, $request->except(['_token', '_method'])));
     }
 
-    public function destroy($id)
+    public function destroy(int|string $id): JsonResponse
     {
         $this->service->destroy($id);
 

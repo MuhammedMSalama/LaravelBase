@@ -3,30 +3,35 @@
     "description": "Laravel module generator: one command scaffolds Model, Migration, Enum, Filter+Pagination, Interface, Repository, Service, Form Requests, API Resource, Policy, Controller (Swagger/OA), and Tests.",
     "type": "library",
     "license": "MIT",
-    "homepage": "https://github.com/Muhammed2024Salama",
+    "homepage": "https://github.com/Muhammed2024Salama/LaravelBase",
     "keywords": [
         "laravel",
         "module-generator",
-        "repository",
-        "service",
+        "code-generator",
+        "repository-pattern",
+        "service-layer",
         "api-resource",
+        "artisan",
         "filter",
         "pagination",
         "swagger",
         "openapi",
+        "rest-api",
         "enum",
         "policy",
         "api-response",
-        "form-request",
-        "trait"
+        "form-request"
     ],
     "authors": [
         {
             "name": "Muhammed Salama",
+            "email": "devmuhammedsalama@gmail.com",
+            "role": "Maintainer",
             "homepage": "https://github.com/Muhammed2024Salama"
         }
     ],
     "support": {
+        "docs": "https://github.com/Muhammed2024Salama/LaravelBase#readme",
         "issues": "https://github.com/Muhammed2024Salama/LaravelBase/issues",
         "source": "https://github.com/Muhammed2024Salama/LaravelBase"
     },
@@ -39,6 +44,7 @@
     },
     "require-dev": {
         "larastan/larastan": "^2.9|^3.0",
+        "laravel/pint": "^1.29",
         "orchestra/testbench": "^8.0|^9.0|^10.0|^11.0",
         "phpunit/phpunit": "^10.5|^11.0|^12.0"
     },
@@ -58,7 +64,9 @@
     },
     "scripts": {
         "test": "vendor/bin/phpunit",
-        "analyse": "vendor/bin/phpstan analyse"
+        "analyse": "vendor/bin/phpstan analyse --memory-limit=512M",
+        "pint": "vendor/bin/pint",
+        "lint": "vendor/bin/pint --test"
     },
     "extra": {
         "laravel": {

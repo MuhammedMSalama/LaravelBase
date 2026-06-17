@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MuhammedSalama\Base\Tests\Feature;
 
 use Illuminate\Database\Schema\Blueprint;
@@ -22,7 +24,7 @@ class RepositoryTest extends TestCase
             $table->timestamps();
         });
 
-        $this->repository = new PostRepository(new Post());
+        $this->repository = new PostRepository(new Post);
     }
 
     public function test_it_creates_and_finds_a_record(): void

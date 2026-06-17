@@ -1,24 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace {{ rootNamespace }}Policies;
 
 use {{ modelNamespace }};
-use Illuminate\Auth\Access\HandlesAuthorization;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 
 /**
- * Register in AuthServiceProvider:
- *   protected $policies = [
- *       {{ model }}::class => {{ class }}Policy::class,
- *   ];
- *
- * Or via Gate::policy() in AppServiceProvider:
+ * Register in AppServiceProvider:
  *   Gate::policy({{ model }}::class, {{ class }}Policy::class);
+ *
+ * Or in AuthServiceProvider (Laravel 10):
+ *   protected $policies = [{{ model }}::class => {{ class }}Policy::class];
  */
 class {{ class }}Policy
 {
-    use HandlesAuthorization;
-
     public function viewAny(Authenticatable $user): bool
     {
         return true;

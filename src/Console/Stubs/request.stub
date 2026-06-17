@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace {{ rootNamespace }}Http\Requests\{{ class }};
 
 use MuhammedSalama\Base\Requests\BaseRequest;
@@ -7,10 +9,7 @@ use MuhammedSalama\Base\Requests\BaseRequest;
 class {{ request }} extends BaseRequest
 {
     /**
-     * Validation rules. Failed validation returns the standard
-     * ApiResponse JSON envelope (422) automatically.
-     *
-     * @return array
+     * @return array<string, mixed>
      */
     public function rules(): array
     {

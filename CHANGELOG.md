@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.0.1] - 2026-06-18
+
+### Added
+- Community health files: Code of Conduct, issue templates, pull request
+  template, and CODEOWNERS.
+- GitHub Discussions and repository topic recommendations under `docs/`.
+- EditorConfig rules for UTF-8, LF line endings, four-space indentation, and
+  Markdown whitespace handling.
+
+### Changed
+- Improved package metadata, Packagist discovery keywords, support links, and
+  distribution export rules.
+- Strengthened README badges and security reporting instructions.
+- Expanded contributor guidance for issue templates and the pull request
+  workflow.
+
+### Infrastructure
+- Documented release infrastructure and static analysis visibility through
+  README badges and repository metadata.
+- Excluded development-only files from package distribution archives.
+
 ## [3.0.0] - 2026-06-05
 
 ### Version reasoning

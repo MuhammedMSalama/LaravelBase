@@ -37,9 +37,7 @@ abstract class AbstractFilter
     public function __construct(
         protected Request $request,
         protected Builder $query,
-    )
-    {
-    }
+    ) {}
 
     /**
      * Apply all filters to the query. Idempotent: safe to call multiple times.
@@ -64,14 +62,14 @@ abstract class AbstractFilter
     protected function applyFilters(): void
     {
         foreach ($this->filters as $column => $operator) {
-            if (!$this->request->has($column)) {
+            if (! $this->request->has($column)) {
                 continue;
             }
 
             $value = $this->request->get($column);
 
             if ($operator === 'like') {
-                $this->query->where($column, 'LIKE', '%' . $value . '%');
+                $this->query->where($column, 'LIKE', '%'.$value.'%');
             } else {
                 $this->query->where($column, $operator, $value);
             }
@@ -83,16 +81,16 @@ abstract class AbstractFilter
      */
     protected function applySearch(): void
     {
-        if (!$this->request->filled('search') || $this->searchable === []) {
+        if (! $this->request->filled('search') || $this->searchable === []) {
             return;
         }
 
-        $term = (string)$this->request->get('search', '');
+        $term = (string) $this->request->get('search', '');
         $columns = $this->searchable;
 
         $this->query->where(function (Builder $q) use ($term, $columns): void {
             foreach ($columns as $column) {
-                $q->orWhere($column, 'LIKE', '%' . $term . '%');
+                $q->orWhere($column, 'LIKE', '%'.$term.'%');
             }
         });
     }
@@ -105,11 +103,11 @@ abstract class AbstractFilter
     {
         $sortBy = $this->request->get('sort_by');
 
-        if (!is_string($sortBy) || !in_array($sortBy, $this->sortable, true)) {
+        if (! is_string($sortBy) || ! in_array($sortBy, $this->sortable, true)) {
             return;
         }
 
-        $direction = strtolower((string)$this->request->get('sort_dir', 'asc'));
+        $direction = strtolower((string) $this->request->get('sort_dir', 'asc'));
 
         $this->query->orderBy($sortBy, $direction === 'desc' ? 'desc' : 'asc');
     }

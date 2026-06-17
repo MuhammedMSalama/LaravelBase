@@ -1,10 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Traits;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Str;
 
 trait ImageUploadTrait
 {
@@ -19,10 +22,10 @@ trait ImageUploadTrait
             return null;
         }
 
-        $imageName = 'media_' . uniqid() . '.' . $image->extension();
+        $imageName = 'media_'.Str::random(32).'.'.$image->extension();
         $image->move(public_path($path), $imageName);
 
-        return $path . '/' . $imageName;
+        return $path.'/'.$imageName;
     }
 
     /**
@@ -41,10 +44,10 @@ trait ImageUploadTrait
                 continue;
             }
 
-            $imageName = 'media_' . uniqid() . '.' . $image->extension();
+            $imageName = 'media_'.Str::random(32).'.'.$image->extension();
             $image->move(public_path($path), $imageName);
 
-            $paths[] = $path . '/' . $imageName;
+            $paths[] = $path.'/'.$imageName;
         }
 
         return $paths;
@@ -56,7 +59,7 @@ trait ImageUploadTrait
             return null;
         }
 
-        if ($oldPath && File::exists(public_path($oldPath))) {
+        if ($oldPath !== null && File::exists(public_path($oldPath))) {
             File::delete(public_path($oldPath));
         }
 
@@ -65,10 +68,10 @@ trait ImageUploadTrait
             return null;
         }
 
-        $imageName = 'media_' . uniqid() . '.' . $image->extension();
+        $imageName = 'media_'.Str::random(32).'.'.$image->extension();
         $image->move(public_path($path), $imageName);
 
-        return $path . '/' . $imageName;
+        return $path.'/'.$imageName;
     }
 
     public function deleteImage(string $path): void

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MuhammedSalama\Base\Console\Commands;
 
 use Illuminate\Console\Command;
@@ -55,17 +57,17 @@ class MakeModuleCommand extends Command
 
     public function handle(): int
     {
-        $class = Str::studly((string)$this->argument('name'));
+        $class = Str::studly((string) $this->argument('name'));
         $modelOption = $this->option('model');
         $model = Str::studly(is_string($modelOption) && $modelOption !== '' ? $modelOption : $class);
         $rootNamespace = $this->laravel->getNamespace();
-        $modelNs = $rootNamespace . 'Models\\' . $model;
+        $modelNs = $rootNamespace.'Models\\'.$model;
         $modelVariable = Str::camel($model);
         $routeName = Str::kebab(Str::pluralStudly($class));
 
         $ctrlOption = $this->option('controller');
         $controller = Str::studly(is_string($ctrlOption) && $ctrlOption !== '' ? $ctrlOption : "{$class}Controller");
-        if (!Str::endsWith($controller, 'Controller')) {
+        if (! Str::endsWith($controller, 'Controller')) {
             $controller .= 'Controller';
         }
 
@@ -249,23 +251,24 @@ class MakeModuleCommand extends Command
      * Create the Eloquent model from a stub. Never overwrites an existing model,
      * even with --force; use --no-model to skip generation entirely.
      *
-     * @param array<string, string> $replacements
+     * @param  array<string, string>  $replacements
      */
     protected function makeModel(string $model, array $replacements): void
     {
         $modelPath = app_path("Models/{$model}.php");
 
         if ($this->files->exists($modelPath)) {
-            $this->line('•  Model already exists, kept: ' . $this->relative($modelPath));
+            $this->line('•  Model already exists, kept: '.$this->relative($modelPath));
+
             return;
         }
 
         $stub = $this->shouldGenerate('enum') ? 'module-model.stub' : 'model.stub';
 
         $this->files->ensureDirectoryExists(dirname($modelPath));
-        $contents = strtr($this->files->get(__DIR__ . '/../Stubs/' . $stub), $replacements);
+        $contents = strtr($this->files->get(__DIR__.'/../Stubs/'.$stub), $replacements);
         $this->files->put($modelPath, $contents);
-        $this->line('•  Model created: ' . $this->relative($modelPath));
+        $this->line('•  Model created: '.$this->relative($modelPath));
     }
 
     /**
@@ -277,8 +280,9 @@ class MakeModuleCommand extends Command
         $table = Str::snake(Str::pluralStudly($class));
         $existing = glob(database_path("migrations/*_create_{$table}_table.php")) ?: [];
 
-        if (!empty($existing) && !$this->option('force')) {
+        if (! empty($existing) && ! $this->option('force')) {
             $this->warn("•  Migration for table '{$table}' already exists, skipped.");
+
             return;
         }
 
@@ -302,7 +306,7 @@ class MakeModuleCommand extends Command
             'Migration'
         );
 
-        if (!in_array($driver, ['mysql', 'pgsql'], true)) {
+        if (! in_array($driver, ['mysql', 'pgsql'], true)) {
             $this->comment("   Notice: driver '{$driver}' detected — portable migration generated (json() → text()).");
         }
     }
@@ -312,8 +316,12 @@ class MakeModuleCommand extends Command
      */
     protected function detectDatabaseDriver(): string
     {
-        $connection = (string)(config('database.default') ?: 'mysql');
-        return (string)(config("database.connections.{$connection}.driver") ?: 'mysql');
+        $connection = config('database.default');
+        $connection = is_string($connection) && $connection !== '' ? $connection : 'mysql';
+
+        $driver = config("database.connections.{$connection}.driver");
+
+        return is_string($driver) && $driver !== '' ? $driver : 'mysql';
     }
 
     // =========================================================================
@@ -327,11 +335,11 @@ class MakeModuleCommand extends Command
     {
         $providerPath = app_path('Providers/RepositoryServiceProvider.php');
 
-        if (!$this->files->exists($providerPath)) {
+        if (! $this->files->exists($providerPath)) {
             $this->files->ensureDirectoryExists(dirname($providerPath));
-            $stub = $this->files->get(__DIR__ . '/../Stubs/repository-service-provider.stub');
+            $stub = $this->files->get(__DIR__.'/../Stubs/repository-service-provider.stub');
             $this->files->put($providerPath, $stub);
-            $this->line('•  RepositoryServiceProvider created: ' . $this->relative($providerPath));
+            $this->line('•  RepositoryServiceProvider created: '.$this->relative($providerPath));
             $this->informProviderRegistration();
         }
 
@@ -341,8 +349,6 @@ class MakeModuleCommand extends Command
     /**
      * Insert a $this->app->bind(…) call into the provider's register() method.
      * Idempotent: skips if the interface FQCN is already present.
-     *
-     * @phpstan-param non-empty-string $providerPath
      */
     protected function addBindingToProvider(string $providerPath, string $class): void
     {
@@ -352,21 +358,23 @@ class MakeModuleCommand extends Command
 
         if (str_contains($content, $needle)) {
             $this->line("•  Binding for {$class} already present in RepositoryServiceProvider, skipped.");
+
             return;
         }
 
-        if (!str_contains($content, $marker)) {
+        if (! str_contains($content, $marker)) {
             $this->warn("•  Could not insert binding: marker '{$marker}' not found in RepositoryServiceProvider.");
             $this->warn('   Add the binding manually inside register():');
             $this->line("   \$this->app->bind(\\App\\Interfaces\\{$class}RepositoryInterface::class, \\App\\Repositories\\{$class}Repository::class);");
+
             return;
         }
 
         $binding = "\$this->app->bind(\n"
-            . "            \\App\\Interfaces\\{$class}RepositoryInterface::class,\n"
-            . "            \\App\\Repositories\\{$class}Repository::class,\n"
-            . "        );\n"
-            . "        {$marker}";
+            ."            \\App\\Interfaces\\{$class}RepositoryInterface::class,\n"
+            ."            \\App\\Repositories\\{$class}Repository::class,\n"
+            ."        );\n"
+            ."        {$marker}";
 
         $this->files->put($providerPath, str_replace($marker, $binding, $content));
         $this->line("•  Binding for {$class} added to RepositoryServiceProvider.");
@@ -393,24 +401,25 @@ class MakeModuleCommand extends Command
      * Write a single file from a stub, replacing all placeholders.
      * Skips if file already exists and --force is not set.
      *
-     * @param array<string, string> $replacements
+     * @param  array<string, string>  $replacements
      */
     protected function generate(string $stub, string $target, array $replacements, string $label): void
     {
-        if ($this->files->exists($target) && !$this->option('force')) {
-            $this->warn('•  ' . $label . ' already exists, skipped: ' . $this->relative($target));
+        if ($this->files->exists($target) && ! $this->option('force')) {
+            $this->warn('•  '.$label.' already exists, skipped: '.$this->relative($target));
+
             return;
         }
 
         $this->files->ensureDirectoryExists(dirname($target));
 
         $contents = strtr(
-            $this->files->get(__DIR__ . '/../Stubs/' . $stub),
+            $this->files->get(__DIR__.'/../Stubs/'.$stub),
             $replacements
         );
 
         $this->files->put($target, $contents);
-        $this->line('•  ' . $label . ' created: ' . $this->relative($target));
+        $this->line('•  '.$label.' created: '.$this->relative($target));
     }
 
     /**
@@ -424,8 +433,8 @@ class MakeModuleCommand extends Command
      */
     protected function shouldGenerate(string $component): bool
     {
-        $only = trim((string)($this->option('only') ?: ''));
-        $except = trim((string)($this->option('except') ?: ''));
+        $only = trim((string) ($this->option('only') ?: ''));
+        $except = trim((string) ($this->option('except') ?: ''));
 
         if ($only !== '') {
             return in_array($component, array_map('trim', explode(',', $only)), true);
@@ -439,7 +448,7 @@ class MakeModuleCommand extends Command
 
         $flag = self::COMPONENT_FLAGS[$component] ?? null;
         if ($flag !== null) {
-            return !(bool)$this->option($flag);
+            return ! (bool) $this->option($flag);
         }
 
         return true;
@@ -450,6 +459,6 @@ class MakeModuleCommand extends Command
      */
     protected function relative(string $path): string
     {
-        return str_replace($this->laravel->basePath() . DIRECTORY_SEPARATOR, '', $path);
+        return str_replace($this->laravel->basePath().DIRECTORY_SEPARATOR, '', $path);
     }
 }

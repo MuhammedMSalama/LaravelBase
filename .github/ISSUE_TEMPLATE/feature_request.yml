@@ -1,0 +1,53 @@
+name: Feature request
+description: Suggest an improvement for LaravelBase.
+title: "[Feature]: "
+labels: ["enhancement", "needs discussion"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for proposing an improvement. Please explain the Laravel use case and how it fits the package's generator-first scope.
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Pre-flight checks
+      options:
+        - label: I have searched existing issues and discussions.
+          required: true
+        - label: I have checked whether this can already be solved with existing options or stubs.
+          required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What developer pain or missing workflow should this solve?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: Describe the API, command option, generated code, or documentation change.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: What other approaches did you consider?
+  - type: dropdown
+    id: breaking
+    attributes:
+      label: Would this be a breaking change?
+      options:
+        - "No"
+        - "Not sure"
+        - "Yes"
+    validations:
+      required: true
+  - type: textarea
+    id: examples
+    attributes:
+      label: Example usage
+      description: Show the command, generated code, or consuming application code you expect.
+      render: php

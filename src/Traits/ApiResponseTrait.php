@@ -1,10 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MuhammedSalama\Base\Traits;
 
-use MuhammedSalama\Base\Helpers\ApiResponse;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\JsonResponse;
+use MuhammedSalama\Base\Helpers\ApiResponse;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
@@ -14,17 +16,17 @@ use Symfony\Component\HttpFoundation\Response;
  */
 trait ApiResponseTrait
 {
-    protected function success($data = null, ?string $message = 'Success', int $code = Response::HTTP_OK): JsonResponse
+    protected function success(mixed $data = null, ?string $message = 'Success', int $code = Response::HTTP_OK): JsonResponse
     {
         return ApiResponse::success($data, $message, $code);
     }
 
-    protected function error(?string $message = 'Something went wrong', int $code = Response::HTTP_BAD_REQUEST, $errors = null): JsonResponse
+    protected function error(?string $message = 'Something went wrong', int $code = Response::HTTP_BAD_REQUEST, mixed $errors = null): JsonResponse
     {
         return ApiResponse::error($message, $code, $errors);
     }
 
-    protected function validationError($errors, ?string $message = 'Validation error'): JsonResponse
+    protected function validationError(mixed $errors, ?string $message = 'Validation error'): JsonResponse
     {
         return ApiResponse::validation($errors, $message);
     }
@@ -34,11 +36,12 @@ trait ApiResponseTrait
         return ApiResponse::notFound($message);
     }
 
-    protected function created($data = null, ?string $message = 'Created successfully'): JsonResponse
+    protected function created(mixed $data = null, ?string $message = 'Created successfully'): JsonResponse
     {
         return ApiResponse::created($data, $message);
     }
 
+    /** @param LengthAwarePaginator<int, mixed> $paginator */
     protected function paginated(LengthAwarePaginator $paginator, ?string $message = 'Success'): JsonResponse
     {
         return ApiResponse::paginated($paginator, $message);

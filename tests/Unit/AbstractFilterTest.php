@@ -1,8 +1,9 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MuhammedSalama\Base\Tests\Unit;
 
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
@@ -54,6 +55,7 @@ class AbstractFilterTest extends TestCase
     private function makeFilter(array $params = []): PostFilter
     {
         $request = Request::create('/test', 'GET', $params);
+
         return new PostFilter($request, Post::query());
     }
 

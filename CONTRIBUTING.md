@@ -12,6 +12,7 @@ updates. Please read this guide before opening a pull request.
 - [Local setup](#local-setup)
 - [Running tests](#running-tests)
 - [Running static analysis](#running-static-analysis)
+- [Issues and discussions](#issues-and-discussions)
 - [Submitting a pull request](#submitting-a-pull-request)
 - [Coding standards](#coding-standards)
 - [Stub changes](#stub-changes)
@@ -21,7 +22,20 @@ updates. Please read this guide before opening a pull request.
 
 ## Code of Conduct
 
-Be respectful. Disagreement about code is fine; personal attacks are not.
+Please read and follow the [Code of Conduct](CODE_OF_CONDUCT.md). Be
+respectful. Disagreement about code is fine; personal attacks are not.
+
+---
+
+## Issues and discussions
+
+Use the GitHub issue templates when reporting bugs or proposing features. Bug
+reports should include a minimal reproduction, package version, Laravel version,
+PHP version, and relevant command output. Feature requests should describe the
+Laravel workflow they improve and whether the proposal changes public behavior.
+
+Security vulnerabilities must be reported privately through GitHub Security
+Advisories or by email as described in [SECURITY.md](SECURITY.md).
 
 ---
 
@@ -88,6 +102,22 @@ PHPStan level 5 with Larastan. The analysis must produce zero errors.
 
 ---
 
+## Running the code style linter
+
+```bash
+# Auto-fix violations
+composer pint
+
+# CI-safe check (exit 1 if any violation found)
+composer lint
+```
+
+Laravel Pint enforces the Laravel preset. Stubs under `src/Console/Stubs/` are
+excluded because they contain template tokens (`{{ class }}`) that would confuse
+the formatter.
+
+---
+
 ## Submitting a pull request
 
 1. **Create a feature branch** from `main`:
@@ -100,7 +130,7 @@ PHPStan level 5 with Larastan. The analysis must produce zero errors.
 
 3. **Ensure CI passes locally:**
    ```bash
-   composer test && composer analyse
+   composer test && composer analyse && composer lint
    ```
 
 4. **Commit with a descriptive message:**
@@ -111,11 +141,12 @@ PHPStan level 5 with Larastan. The analysis must produce zero errors.
    ```
 
 5. **Push and open a PR against `main`** with a clear description of what
-   changed and why.
+   changed and why. Complete the pull request template, link related issues or
+   discussions, and call out any generated stub changes.
 
 6. **CI must be green** before merging. The workflow runs PHPUnit across
-   PHP 8.1–8.4 × Laravel 10–13, PHPStan analysis, and a `make:module` smoke
-   test that lint-checks every generated file.
+   PHP 8.1–8.4 × Laravel 10–13, PHPStan analysis, Laravel Pint code-style
+   check, and a `make:module` smoke test that lint-checks every generated file.
 
 ---
 

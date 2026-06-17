@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MuhammedSalama\Base\Tests\Feature;
 
 use Illuminate\Support\Facades\File;

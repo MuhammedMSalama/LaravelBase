@@ -1,7 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Traits;
 
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -13,7 +16,7 @@ use Symfony\Component\HttpFoundation\Response;
  */
 trait ApiResponseTrait
 {
-    protected function success($data = null, ?string $message = 'Success', int $code = Response::HTTP_OK): JsonResponse
+    protected function success(mixed $data = null, ?string $message = 'Success', int $code = Response::HTTP_OK): JsonResponse
     {
         return response()->json([
             'status' => true,
@@ -22,12 +25,12 @@ trait ApiResponseTrait
         ], $code);
     }
 
-    protected function created($data = null, ?string $message = 'Created successfully'): JsonResponse
+    protected function created(mixed $data = null, ?string $message = 'Created successfully'): JsonResponse
     {
         return $this->success($data, $message, Response::HTTP_CREATED);
     }
 
-    protected function error(?string $message = 'Something went wrong', int $code = Response::HTTP_BAD_REQUEST, $errors = null): JsonResponse
+    protected function error(?string $message = 'Something went wrong', int $code = Response::HTTP_BAD_REQUEST, mixed $errors = null): JsonResponse
     {
         return response()->json([
             'status' => false,
@@ -36,7 +39,7 @@ trait ApiResponseTrait
         ], $code);
     }
 
-    protected function validationError($errors, ?string $message = 'Validation error'): JsonResponse
+    protected function validationError(mixed $errors, ?string $message = 'Validation error'): JsonResponse
     {
         return $this->error($message, Response::HTTP_UNPROCESSABLE_ENTITY, $errors);
     }
@@ -56,7 +59,8 @@ trait ApiResponseTrait
         return $this->error($message, Response::HTTP_FORBIDDEN);
     }
 
-    protected function paginated($paginator, ?string $message = 'Success'): JsonResponse
+    /** @param LengthAwarePaginator<int, mixed> $paginator */
+    protected function paginated(LengthAwarePaginator $paginator, ?string $message = 'Success'): JsonResponse
     {
         return response()->json([
             'status' => true,

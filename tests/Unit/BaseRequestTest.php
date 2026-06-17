@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MuhammedSalama\Base\Tests\Unit;
 
 use Illuminate\Http\Exceptions\HttpResponseException;
@@ -30,7 +32,7 @@ class BaseRequestTest extends TestCase
             $response = $e->getResponse();
             $this->assertSame(422, $response->getStatusCode());
 
-            $payload = json_decode((string)$response->getContent(), true);
+            $payload = json_decode((string) $response->getContent(), true);
             $this->assertFalse($payload['status']);
             $this->assertSame('Validation error', $payload['message']);
             $this->assertArrayHasKey('errors', $payload);
@@ -50,7 +52,7 @@ class BaseRequestTest extends TestCase
         try {
             $request->callFailedValidation($validator);
         } catch (HttpResponseException $e) {
-            $payload = json_decode((string)$e->getResponse()->getContent(), true);
+            $payload = json_decode((string) $e->getResponse()->getContent(), true);
             $this->assertArrayHasKey('email', $payload['errors']);
             throw $e;
         }
@@ -61,7 +63,8 @@ class BaseRequestTest extends TestCase
     /** @param array<string, string> $rules */
     private function makeRequest(array $rules): BaseRequest
     {
-        return new class($rules) extends BaseRequest {
+        return new class($rules) extends BaseRequest
+        {
             /** @param array<string, string> $testRules */
             public function __construct(private array $testRules)
             {

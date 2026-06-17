@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MuhammedSalama\Base\Console\Commands;
 
 use Illuminate\Console\Command;
@@ -35,13 +37,13 @@ class MakeRepositoryCommand extends Command
             '--no-enum' => true,
             '--no-filter' => true,
             // Forward boolean flags.
-            '--no-model' => (bool)$this->option('no-model'),
-            '--no-service' => (bool)$this->option('no-service'),
-            '--no-controller' => (bool)$this->option('no-controller'),
-            '--no-request' => (bool)$this->option('no-request'),
-            '--no-migration' => (bool)$this->option('no-migration'),
-            '--provider' => (bool)$this->option('provider'),
-            '--force' => (bool)$this->option('force'),
+            '--no-model' => (bool) $this->option('no-model'),
+            '--no-service' => (bool) $this->option('no-service'),
+            '--no-controller' => (bool) $this->option('no-controller'),
+            '--no-request' => (bool) $this->option('no-request'),
+            '--no-migration' => (bool) $this->option('no-migration'),
+            '--provider' => (bool) $this->option('provider'),
+            '--force' => (bool) $this->option('force'),
         ];
 
         $modelOption = $this->option('model');

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MuhammedSalama\Base\Tests\Feature;
 
 use Illuminate\Support\Facades\File;
@@ -7,7 +9,7 @@ use MuhammedSalama\Base\Tests\TestCase;
 
 class MakeRepositoryCommandTest extends TestCase
 {
-    /** Paths created by the command during a test — cleaned up in tearDown. */
+    /** @var list<string> Paths created by the command during a test — cleaned up in tearDown. */
     private array $createdPaths = [];
 
     protected function tearDown(): void
@@ -27,18 +29,18 @@ class MakeRepositoryCommandTest extends TestCase
 
     public function test_command_generates_interface_and_repository(): void
     {
-        $interfacePath  = app_path('Interfaces/WidgetRepositoryInterface.php');
+        $interfacePath = app_path('Interfaces/WidgetRepositoryInterface.php');
         $repositoryPath = app_path('Repositories/WidgetRepository.php');
-        $modelPath      = app_path('Models/Widget.php');
+        $modelPath = app_path('Models/Widget.php');
 
         $this->createdPaths = [$interfacePath, $repositoryPath, $modelPath];
 
         $this->artisan('make:repository', [
-            'name'            => 'Widget',
-            '--no-service'    => true,
+            'name' => 'Widget',
+            '--no-service' => true,
             '--no-controller' => true,
-            '--no-request'    => true,
-            '--no-migration'  => true,
+            '--no-request' => true,
+            '--no-migration' => true,
         ])->assertSuccessful();
 
         $this->assertFileExists($interfacePath);
@@ -60,10 +62,10 @@ class MakeRepositoryCommandTest extends TestCase
         ];
 
         $this->artisan('make:repository', [
-            'name'            => 'Order',
+            'name' => 'Order',
             '--no-controller' => true,
-            '--no-request'    => true,
-            '--no-migration'  => true,
+            '--no-request' => true,
+            '--no-migration' => true,
         ])->assertSuccessful();
 
         $this->assertFileExists($servicePath);
@@ -84,11 +86,11 @@ class MakeRepositoryCommandTest extends TestCase
         ];
 
         $this->artisan('make:repository', [
-            'name'            => 'Gadget',
-            '--no-service'    => true,
+            'name' => 'Gadget',
+            '--no-service' => true,
             '--no-controller' => true,
-            '--no-request'    => true,
-            '--no-migration'  => true,
+            '--no-request' => true,
+            '--no-migration' => true,
         ])->assertSuccessful();
 
         $this->assertStringContainsString('existing', File::get($interfacePath));
@@ -108,12 +110,12 @@ class MakeRepositoryCommandTest extends TestCase
         ];
 
         $this->artisan('make:repository', [
-            'name'            => 'Gizmo',
-            '--no-service'    => true,
+            'name' => 'Gizmo',
+            '--no-service' => true,
             '--no-controller' => true,
-            '--no-request'    => true,
-            '--no-migration'  => true,
-            '--force'         => true,
+            '--no-request' => true,
+            '--no-migration' => true,
+            '--force' => true,
         ])->assertSuccessful();
 
         $this->assertStringContainsString('GizmoRepositoryInterface', File::get($interfacePath));
@@ -135,8 +137,8 @@ class MakeRepositoryCommandTest extends TestCase
         ];
 
         $this->artisan('make:repository', [
-            'name'           => 'Gadget',
-            '--controller'   => 'GadgetApiController',
+            'name' => 'Gadget',
+            '--controller' => 'GadgetApiController',
             '--no-migration' => true,
         ])->assertSuccessful();
 
@@ -159,11 +161,11 @@ class MakeRepositoryCommandTest extends TestCase
         ];
 
         $this->artisan('make:repository', [
-            'name'            => 'Rocket',
-            '--no-service'    => true,
+            'name' => 'Rocket',
+            '--no-service' => true,
             '--no-controller' => true,
-            '--no-request'    => true,
-            '--no-migration'  => true,
+            '--no-request' => true,
+            '--no-migration' => true,
         ])->assertSuccessful();
 
         $this->assertFileExists($modelPath);
@@ -186,11 +188,11 @@ class MakeRepositoryCommandTest extends TestCase
         ];
 
         $this->artisan('make:repository', [
-            'name'            => 'Shuttle',
-            '--no-service'    => true,
+            'name' => 'Shuttle',
+            '--no-service' => true,
             '--no-controller' => true,
-            '--no-request'    => true,
-            '--no-migration'  => true,
+            '--no-request' => true,
+            '--no-migration' => true,
         ])->assertSuccessful();
 
         $this->assertStringContainsString('hand-crafted', File::get($modelPath));
@@ -210,12 +212,12 @@ class MakeRepositoryCommandTest extends TestCase
         ];
 
         $this->artisan('make:repository', [
-            'name'            => 'Probe',
-            '--no-service'    => true,
+            'name' => 'Probe',
+            '--no-service' => true,
             '--no-controller' => true,
-            '--no-request'    => true,
-            '--no-migration'  => true,
-            '--force'         => true,
+            '--no-request' => true,
+            '--no-migration' => true,
+            '--force' => true,
         ])->assertSuccessful();
 
         $this->assertStringContainsString('keep me', File::get($modelPath));
@@ -231,12 +233,12 @@ class MakeRepositoryCommandTest extends TestCase
         ];
 
         $this->artisan('make:repository', [
-            'name'            => 'Comet',
-            '--no-model'      => true,
-            '--no-service'    => true,
+            'name' => 'Comet',
+            '--no-model' => true,
+            '--no-service' => true,
             '--no-controller' => true,
-            '--no-request'    => true,
-            '--no-migration'  => true,
+            '--no-request' => true,
+            '--no-migration' => true,
         ])->assertSuccessful();
 
         $this->assertFileDoesNotExist($modelPath);
@@ -253,12 +255,12 @@ class MakeRepositoryCommandTest extends TestCase
         ];
 
         $this->artisan('make:repository', [
-            'name'            => 'Star',
-            '--model'         => 'Planet',
-            '--no-service'    => true,
+            'name' => 'Star',
+            '--model' => 'Planet',
+            '--no-service' => true,
             '--no-controller' => true,
-            '--no-request'    => true,
-            '--no-migration'  => true,
+            '--no-request' => true,
+            '--no-migration' => true,
         ])->assertSuccessful();
 
         $this->assertFileExists($modelPath);
@@ -282,12 +284,12 @@ class MakeRepositoryCommandTest extends TestCase
         ];
 
         $this->artisan('make:repository', [
-            'name'            => 'Alpha',
-            '--no-service'    => true,
+            'name' => 'Alpha',
+            '--no-service' => true,
             '--no-controller' => true,
-            '--no-request'    => true,
-            '--no-migration'  => true,
-            '--provider'      => true,
+            '--no-request' => true,
+            '--no-migration' => true,
+            '--provider' => true,
         ])->assertSuccessful();
 
         $this->assertFileExists($providerPath);
@@ -312,21 +314,21 @@ class MakeRepositoryCommandTest extends TestCase
         ];
 
         $this->artisan('make:repository', [
-            'name'            => 'Beta',
-            '--no-service'    => true,
+            'name' => 'Beta',
+            '--no-service' => true,
             '--no-controller' => true,
-            '--no-request'    => true,
-            '--no-migration'  => true,
-            '--provider'      => true,
+            '--no-request' => true,
+            '--no-migration' => true,
+            '--provider' => true,
         ])->assertSuccessful();
 
         $this->artisan('make:repository', [
-            'name'            => 'Gamma',
-            '--no-service'    => true,
+            'name' => 'Gamma',
+            '--no-service' => true,
             '--no-controller' => true,
-            '--no-request'    => true,
-            '--no-migration'  => true,
-            '--provider'      => true,
+            '--no-request' => true,
+            '--no-migration' => true,
+            '--provider' => true,
         ])->assertSuccessful();
 
         $content = File::get($providerPath);
@@ -347,22 +349,22 @@ class MakeRepositoryCommandTest extends TestCase
         ];
 
         $this->artisan('make:repository', [
-            'name'            => 'Delta',
-            '--no-service'    => true,
+            'name' => 'Delta',
+            '--no-service' => true,
             '--no-controller' => true,
-            '--no-request'    => true,
-            '--no-migration'  => true,
-            '--provider'      => true,
+            '--no-request' => true,
+            '--no-migration' => true,
+            '--provider' => true,
         ])->assertSuccessful();
 
         $this->artisan('make:repository', [
-            'name'            => 'Delta',
-            '--no-service'    => true,
+            'name' => 'Delta',
+            '--no-service' => true,
             '--no-controller' => true,
-            '--no-request'    => true,
-            '--no-migration'  => true,
-            '--provider'      => true,
-            '--force'         => true,
+            '--no-request' => true,
+            '--no-migration' => true,
+            '--provider' => true,
+            '--force' => true,
         ])->assertSuccessful();
 
         $content = File::get($providerPath);
@@ -403,12 +405,12 @@ PHP);
         ];
 
         $this->artisan('make:repository', [
-            'name'            => 'Epsilon',
-            '--no-service'    => true,
+            'name' => 'Epsilon',
+            '--no-service' => true,
             '--no-controller' => true,
-            '--no-request'    => true,
-            '--no-migration'  => true,
-            '--provider'      => true,
+            '--no-request' => true,
+            '--no-migration' => true,
+            '--provider' => true,
         ])->assertSuccessful();
 
         $content = File::get($providerPath);
@@ -427,11 +429,11 @@ PHP);
         ];
 
         $this->artisan('make:repository', [
-            'name'            => 'Zeta',
-            '--no-service'    => true,
+            'name' => 'Zeta',
+            '--no-service' => true,
             '--no-controller' => true,
-            '--no-request'    => true,
-            '--no-migration'  => true,
+            '--no-request' => true,
+            '--no-migration' => true,
             // No --provider flag.
         ])->assertSuccessful();
 
