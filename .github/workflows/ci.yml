@@ -141,7 +141,15 @@ jobs:
         run: composer update --prefer-stable --prefer-dist --no-interaction --no-progress
 
       - name: Run static analysis
-        run: composer analyse
+        run: composer analyse 2>&1 | tee /tmp/phpstan.log; exit ${PIPESTATUS[0]}
+
+      - name: Upload PHPStan log on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phpstan-log
+          path: /tmp/phpstan.log
+          retention-days: 7
 
   # ---------------------------------------------------------------------------
   # Code style — Laravel Pint on PHP 8.3, fails on any violation
@@ -331,3 +339,76 @@ jobs:
       - name: Remove testbench.yaml
         if: always()
         run: rm -f testbench.yaml
+
+  # ---------------------------------------------------------------------------
+  # Coverage — single run on PHP 8.3 / Laravel 12 with pcov.
+  # Generates Clover XML + JUnit XML, uploads to Codecov and as an artifact.
+  # Runs in parallel with the matrix; does not gate the matrix.
+  # ---------------------------------------------------------------------------
+  coverage:
+    name: "Coverage (PHP 8.3 / Laravel 12)"
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up PHP 8.3 with pcov
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: dom, curl, libxml, mbstring, pdo, sqlite, pdo_sqlite, fileinfo
+          coverage: pcov
+
+      - name: Get Composer cache directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+
+      - name: Cache Composer packages
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-coverage-${{ hashFiles('**/composer.json') }}
+          restore-keys: |
+            ${{ runner.os }}-coverage-
+
+      - name: Disable Composer advisory blocking
+        run: composer config --no-interaction policy.advisories.block false
+
+      - name: Constrain to Laravel 12
+        run: |
+          composer require \
+            "illuminate/support:12.*" \
+            "illuminate/http:12.*" \
+            "illuminate/database:12.*" \
+            "illuminate/contracts:12.*" \
+            "orchestra/testbench:^10.0" \
+            --no-update
+
+      - name: Install dependencies
+        run: composer update --prefer-stable --prefer-dist --no-interaction --no-progress
+
+      - name: Run tests with coverage
+        run: |
+          mkdir -p coverage
+          vendor/bin/phpunit \
+            --coverage-clover coverage/clover.xml \
+            --log-junit coverage/junit.xml
+
+      - name: Upload coverage artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage/
+          retention-days: 7
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: coverage/clover.xml
+          flags: unittests
+          fail_ci_if_error: false
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

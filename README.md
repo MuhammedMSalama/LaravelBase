@@ -14,7 +14,13 @@
     <img src="https://img.shields.io/packagist/dt/muhammedsalama/laravel-base?style=flat-square" alt="Total Downloads">
   </a>
   <a href="https://github.com/Muhammed2024Salama/LaravelBase/actions/workflows/ci.yml">
-    <img src="https://img.shields.io/github/actions/workflow/status/Muhammed2024Salama/LaravelBase/ci.yml?branch=main&style=flat-square&label=PHPStan" alt="PHPStan">
+    <img src="https://img.shields.io/github/actions/workflow/status/Muhammed2024Salama/LaravelBase/ci.yml?branch=main&style=flat-square&label=tests" alt="Tests">
+  </a>
+  <a href="https://github.com/Muhammed2024Salama/LaravelBase/actions/workflows/ci.yml">
+    <img src="https://img.shields.io/badge/PHPStan-level%205-brightgreen?style=flat-square" alt="PHPStan Level 5">
+  </a>
+  <a href="https://codecov.io/gh/Muhammed2024Salama/LaravelBase">
+    <img src="https://img.shields.io/codecov/c/github/Muhammed2024Salama/LaravelBase/main?style=flat-square&label=coverage" alt="Code Coverage">
   </a>
   <a href="https://packagist.org/packages/muhammedsalama/laravel-base">
     <img src="https://img.shields.io/packagist/php-v/muhammedsalama/laravel-base?style=flat-square" alt="PHP Version">
