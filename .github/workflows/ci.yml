@@ -145,7 +145,7 @@ jobs:
 
       - name: Upload PHPStan log on failure
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: phpstan-log
           path: /tmp/phpstan.log
@@ -398,7 +398,7 @@ jobs:
 
       - name: Upload coverage artifact
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: coverage-report
           path: coverage/
