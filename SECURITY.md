@@ -18,7 +18,7 @@ Please report security vulnerabilities through one of the following private
 channels:
 
 - **GitHub private vulnerability reporting**: open a confidential report at
-  <https://github.com/Muhammed2024Salama/LaravelBase/security/advisories/new>.
+  <https://github.com/MuhammedMSalama/LaravelBase/security/advisories/new>.
 - **Maintainer email**: contact Muhammed Salama at
   <devmuhammedsalama@gmail.com>.
 

@@ -7,7 +7,7 @@ Topics drive organic discovery through GitHub search and the Explore page.
 
 ## How to apply
 
-1. Go to `https://github.com/Muhammed2024Salama/LaravelBase`.
+1. Go to `https://github.com/MuhammedMSalama/LaravelBase`.
 2. Click the gear icon next to **About**.
 3. Paste each topic from the list below into the **Topics** field.
 4. Save.
