@@ -13,14 +13,14 @@
   <a href="https://packagist.org/packages/muhammedsalama/laravel-base">
     <img src="https://img.shields.io/packagist/dt/muhammedsalama/laravel-base?style=flat-square" alt="Total Downloads">
   </a>
-  <a href="https://github.com/Muhammed2024Salama/LaravelBase/actions/workflows/ci.yml">
-    <img src="https://img.shields.io/github/actions/workflow/status/Muhammed2024Salama/LaravelBase/ci.yml?branch=main&style=flat-square&label=tests" alt="Tests">
+  <a href="https://github.com/MuhammedMSalama/LaravelBase/actions/workflows/ci.yml">
+    <img src="https://img.shields.io/github/actions/workflow/status/MuhammedMSalama/LaravelBase/ci.yml?branch=main&style=flat-square&label=tests" alt="Tests">
   </a>
-  <a href="https://github.com/Muhammed2024Salama/LaravelBase/actions/workflows/ci.yml">
+  <a href="https://github.com/MuhammedMSalama/LaravelBase/actions/workflows/ci.yml">
     <img src="https://img.shields.io/badge/PHPStan-level%205-brightgreen?style=flat-square" alt="PHPStan Level 5">
   </a>
-  <a href="https://codecov.io/gh/Muhammed2024Salama/LaravelBase">
-    <img src="https://img.shields.io/codecov/c/github/Muhammed2024Salama/LaravelBase/main?style=flat-square&label=coverage" alt="Code Coverage">
+  <a href="https://codecov.io/gh/MuhammedMSalama/LaravelBase">
+    <img src="https://img.shields.io/codecov/c/github/MuhammedMSalama/LaravelBase/main?style=flat-square&label=coverage" alt="Code Coverage">
   </a>
   <a href="https://packagist.org/packages/muhammedsalama/laravel-base">
     <img src="https://img.shields.io/packagist/php-v/muhammedsalama/laravel-base?style=flat-square" alt="PHP Version">
@@ -28,8 +28,8 @@
   <a href="LICENSE">
     <img src="https://img.shields.io/badge/license-MIT-green?style=flat-square" alt="License: MIT">
   </a>
-  <a href="https://github.com/Muhammed2024Salama/LaravelBase/actions">
-    <img src="https://img.shields.io/github/actions/workflow/status/Muhammed2024Salama/LaravelBase/ci.yml?branch=main&style=flat-square&label=CI" alt="CI">
+  <a href="https://github.com/MuhammedMSalama/LaravelBase/actions">
+    <img src="https://img.shields.io/github/actions/workflow/status/MuhammedMSalama/LaravelBase/ci.yml?branch=main&style=flat-square&label=CI" alt="CI">
   </a>
 </p>
 
@@ -202,7 +202,7 @@ The service provider registers automatically via Laravel's package auto-discover
 "repositories": [
     {
         "type": "vcs",
-        "url": "https://github.com/Muhammed2024Salama/LaravelBase"
+        "url": "https://github.com/MuhammedMSalama/LaravelBase"
     }
 ]
 ```
@@ -1123,7 +1123,7 @@ Contributions are welcome. Please:
 
 ## Security
 
-If you discover a security vulnerability, please use [GitHub private vulnerability reporting](https://github.com/Muhammed2024Salama/LaravelBase/security/advisories/new) or contact the maintainer at <devmuhammedsalama@gmail.com>. Do **not** disclose vulnerabilities publicly until they have been addressed.
+If you discover a security vulnerability, please use [GitHub private vulnerability reporting](https://github.com/MuhammedMSalama/LaravelBase/security/advisories/new) or contact the maintainer at <devmuhammedsalama@gmail.com>. Do **not** disclose vulnerabilities publicly until they have been addressed.
 
 ---
 
@@ -1135,4 +1135,4 @@ This package is open-sourced software licensed under the [MIT license](LICENSE).
 
 ## Author
 
-**Muhammed Salama** — [@Muhammed2024Salama](https://github.com/Muhammed2024Salama)
+**Muhammed Salama** — [@MuhammedMSalama](https://github.com/MuhammedMSalama)
